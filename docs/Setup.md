@@ -41,4 +41,8 @@ npm install @chakra-ui/icons
    Template - https://dashboard.emailjs.com/admin/templates/w8kfd5n
    Install - npm install emailjs-com
 
-7. React icons for skills & its icons
+7. For navigation
+    npm install react-router-dom
+    npm install -D @types/react-router-dom
+
+
