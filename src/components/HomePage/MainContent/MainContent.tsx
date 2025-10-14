@@ -1,7 +1,5 @@
-// MainContent.tsx
-import { Flex, useColorModeValue } from "@chakra-ui/react";
+import { Flex } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import { NotebookPen, CheckSquare } from "lucide-react";
 import { DashboardCard } from "./DashboardCard";
 import { getSections } from "./Sections";
 

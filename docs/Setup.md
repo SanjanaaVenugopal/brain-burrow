@@ -42,7 +42,8 @@ npm install @chakra-ui/icons
    Install - npm install emailjs-com
 
 7. For navigation
-    npm install react-router-dom
-    npm install -D @types/react-router-dom
+   npm install react-router-dom
+   npm install -D @types/react-router-dom
 
-
+8. For calendar
+   npm install react-calendar date-fns
