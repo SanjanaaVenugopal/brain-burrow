@@ -3,25 +3,11 @@ import { Flex, useColorModeValue } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { NotebookPen, CheckSquare } from "lucide-react";
 import { DashboardCard } from "./DashboardCard";
+import { getSections } from "./Sections";
 
 export const MainContent = () => {
     const navigate = useNavigate();
-
-    const sections = [
-        {
-            title: "Journal",
-            summary: "Last entry: 2 days ago",
-            icon: NotebookPen,
-            onClick: () => navigate("/journal"),
-        },
-        {
-            title: "To-Do",
-            summary: "3 tasks due today",
-            icon: CheckSquare,
-            onClick: () => navigate("/todo"),
-        },
-    ];
-
+    const sections = getSections(navigate);
     return (
         <Flex
             direction={{ base: "column", md: "row" }}
