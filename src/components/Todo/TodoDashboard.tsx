@@ -1,7 +1,11 @@
-import { Box, Heading, Checkbox, Flex, Text } from "@chakra-ui/react";
+import { Box, Heading, Checkbox, Flex, Text, Tag, TagLabel } from "@chakra-ui/react";
 import { Todo } from "./Todo.type";
+import { format } from "date-fns";
 
-type Props = { groupedTodos: Record<string, Todo[]>; toggleTodo: (id: number) => void };
+type Props = {
+    groupedTodos: Record<string, Todo[]>;
+    toggleTodo: (id: number) => void;
+};
 
 export const TodoDashboard: React.FC<Props> = ({ groupedTodos, toggleTodo }) => (
     <Flex wrap="wrap" gap={6} justify="center">
@@ -19,13 +23,49 @@ export const TodoDashboard: React.FC<Props> = ({ groupedTodos, toggleTodo }) => 
                 <Heading fontSize="lg" mb={3}>
                     {group}
                 </Heading>
+
                 {todos.map((todo) => (
-                    <Flex key={todo.id} align="center" gap={2} mb={2}>
+                    <Flex
+                        key={todo.id}
+                        align="flex-start"
+                        gap={2}
+                        mb={3}
+                        p={2}
+                        rounded="md"
+                        _hover={{ bg: "rgba(255,255,255,0.1)" }}
+                    >
                         <Checkbox
                             isChecked={todo.completed}
                             onChange={() => toggleTodo(todo.id)}
+                            mt={1}
                         />
-                        <Text as={todo.completed ? "del" : undefined}>{todo.title}</Text>
+                        <Box>
+                            <Text
+                                fontWeight="medium"
+                                as={todo.completed ? "del" : undefined}
+                                noOfLines={1}
+                            >
+                                {todo.title}
+                            </Text>
+
+                            {/* Show scheduled time for Today & Tomorrow */}
+                            {(group === "Today" || group === "Tomorrow") && todo.scheduledAt && (
+                                <Text fontSize="sm" opacity={0.7}>
+                                    🕒 {format(todo.scheduledAt, "hh:mm a")}
+                                </Text>
+                            )}
+
+                            {/* Show tags */}
+                            {todo.tags && todo.tags.length > 0 && (
+                                <Flex wrap="wrap" gap={1} mt={1}>
+                                    {todo.tags.map((tag, i) => (
+                                        <Tag key={i} size="sm" colorScheme="purple" borderRadius="full">
+                                            <TagLabel>{tag}</TagLabel>
+                                        </Tag>
+                                    ))}
+                                </Flex>
+                            )}
+                        </Box>
                     </Flex>
                 ))}
             </Box>

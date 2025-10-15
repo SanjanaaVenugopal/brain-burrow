@@ -47,3 +47,5 @@ npm install @chakra-ui/icons
 
 8. For calendar
    npm install react-calendar date-fns
+   npm install react-datepicker
+   npm install date-fns

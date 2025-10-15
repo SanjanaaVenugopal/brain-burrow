@@ -4,55 +4,56 @@ import { TodoDashboard } from "../components/Todo/TodoDashboard";
 import { TodoCalendar } from "../components/Todo/TodoCalendar";
 import { Todo } from "../components/Todo/Todo.type";
 import { AddTodoButton } from "../components/Todo/AddTodoButton";
+import { GroupedTodos } from "../components/Todo/GroupedTodos";
+import { TodosMock } from "../Data/todo.mock";
+import { TodoTexts } from "../Data/constants";
+import { TodoHeader } from "../components/Todo/TodoHeader";
+import { Box } from "@chakra-ui/react";
 
 export const TodoPage = () => {
     const [mode, setMode] = React.useState<"dashboard" | "calendar">("dashboard");
-    const [todos, setTodos] = React.useState<Todo[]>([]);
 
-    const toggleTodo = (id: number) =>
+    // ✅ initialize state with your mock data only once
+    const [todos, setTodos] = React.useState<Todo[]>(TodosMock);
+
+    const toggleTodo = (id: number) => {
         setTodos((prev) =>
-            prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+            prev.map((todo) =>
+                todo.id === id ? { ...todo, completed: !todo.completed } : todo
+            )
         );
-
-    const todosHardcoded = [
-        { id: 1, title: "Buy groceries", dueDate: new Date(), completed: false },
-        { id: 2, title: "Finish Chakra UI setup", dueDate: new Date(), completed: true },
-        { id: 3, title: "Plan Europe trip", dueDate: new Date(2025, 9, 15), completed: false },
-    ];
-
-    const allTodos = [...todosHardcoded, ...todos];
-
-    const groupedTodosHardcoded: Record<string, Todo[]> = {
-        "Today": allTodos
-            .filter((t) => t.dueDate?.toDateString() === new Date().toDateString())
-            .map((t) => ({ ...t, group: "Today" })),
-        "Upcoming": allTodos
-            .filter((t) => t.dueDate ? t.dueDate > new Date() : true)
-            .map((t) => ({ ...t, group: "Upcoming" })),
     };
+
+    const groupedTodos = GroupedTodos(todos);
 
     const addTodo = (partial: Partial<Todo>) => {
         const todo: Todo = {
             id: Date.now(),
             title: partial.title ?? "Untitled Task",
             completed: false,
-            group: partial.group,
-            dueDate: partial.dueDate,
+            dueDate:
+                partial.dueDate ??
+                new Date(new Date().setDate(new Date().getDate() + 1000)),
             description: partial.description ?? "",
-            scheduledAt: partial.scheduledAt,
+            scheduledAt:
+                partial.scheduledAt ??
+                new Date(new Date().setDate(new Date().getDate() + 1000)),
         };
         setTodos((prev) => [...prev, todo]);
     };
 
     return (
         <>
-            <TodoViewToggle mode={mode} onChange={setMode} />
+            <TodoHeader />
+            <br></br>
+            <Box position="fixed" top="100px" right="20px" zIndex={10}>
+                <TodoViewToggle mode={mode} onChange={setMode} />
+            </Box>
             {mode === "dashboard" ? (
-                <TodoDashboard groupedTodos={groupedTodosHardcoded} toggleTodo={toggleTodo} />
+                <TodoDashboard groupedTodos={groupedTodos} toggleTodo={toggleTodo} />
             ) : (
                 <TodoCalendar todos={todos} onSelectDate={(d) => console.log(d)} />
             )}
-            {/* <TodoDashboard groupedTodos={groupedTodos} toggleTodo={toggleTodo} /> */}
             <AddTodoButton onAdd={addTodo} />
         </>
     );

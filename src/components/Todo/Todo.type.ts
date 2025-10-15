@@ -2,8 +2,8 @@ export type Todo = {
   id: number;
   title: string;
   completed: boolean;
-  dueDate?: Date;
-  group?: string;
+  dueDate?: Date; // When it's due (used for grouping)
+  scheduledAt?: Date; // Exact time for Today / Tomorrow tasks
   description?: string;
-  scheduledAt?: Date;
+  tags?: string[]; // e.g. ["work", "personal", "urgent"]
 };

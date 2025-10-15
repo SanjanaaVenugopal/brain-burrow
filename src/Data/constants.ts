@@ -39,4 +39,9 @@ export enum Welcome {
   tagline = "MindNest is a tool to declutter your mind",
 }
 
+export enum TodoTexts {
+  headline = "Amanscape",
+  tagline = "☁️Where plans pause, and peace begins!",
+}
+
 export const iconSize = 16;
