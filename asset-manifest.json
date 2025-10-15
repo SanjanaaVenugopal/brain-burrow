@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/mindNest/static/css/main.9c4345ba.css",
+    "main.js": "/mindNest/static/js/main.00eea29d.js",
+    "index.html": "/mindNest/index.html",
+    "main.9c4345ba.css.map": "/mindNest/static/css/main.9c4345ba.css.map",
+    "main.00eea29d.js.map": "/mindNest/static/js/main.00eea29d.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9c4345ba.css",
+    "static/js/main.00eea29d.js"
+  ]
+}
