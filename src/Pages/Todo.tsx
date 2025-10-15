@@ -45,7 +45,7 @@ export const TodoPage = () => {
         <>
             <TodoHeader />
             <br></br>
-            <Box position="fixed" top="100px" right="20px" zIndex={10}>
+            <Box position="fixed" top="100px" left="20px" zIndex={10}>
                 <TodoViewToggle mode={mode} onChange={setMode} />
             </Box>
             {mode === "dashboard" ? (
