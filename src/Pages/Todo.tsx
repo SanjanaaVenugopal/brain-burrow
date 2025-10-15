@@ -6,7 +6,6 @@ import { Todo } from "../components/Todo/Todo.type";
 import { AddTodoButton } from "../components/Todo/AddTodoButton";
 import { GroupedTodos } from "../components/Todo/GroupedTodos";
 import { TodosMock } from "../Data/todo.mock";
-import { TodoTexts } from "../Data/constants";
 import { TodoHeader } from "../components/Todo/TodoHeader";
 import { Box } from "@chakra-ui/react";
 

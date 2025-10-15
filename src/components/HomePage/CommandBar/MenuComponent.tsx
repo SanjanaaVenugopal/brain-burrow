@@ -8,7 +8,7 @@ import {
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
-import { MoreVertical, Moon, Sun, Download, Contact2 } from "lucide-react";
+import { MoreVertical, Moon, Sun, Contact2 } from "lucide-react";
 import { commandBar, iconSize } from "../../../Data/constants";
 import { useTheme } from "./useTheme";
 import { ContactMe } from "./ContactMe";

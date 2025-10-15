@@ -2,7 +2,6 @@ import React from "react";
 import { MenuComponent } from "./MenuComponent";
 import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { iconSize } from "../../../Data/constants";
 
 type CommandBarProps = {};
 

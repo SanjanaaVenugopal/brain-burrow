@@ -1,19 +1,13 @@
 import React from "react";
 import {
-    Button,
     Modal,
     ModalOverlay,
     ModalContent,
     ModalHeader,
     ModalBody,
-    ModalFooter,
-    Slider,
-    SliderTrack,
-    SliderFilledTrack,
-    SliderThumb,
 } from "@chakra-ui/react";
 import { ContactForm } from "./ContactForm";
-import { ContactMeClown, ContactMeEmail, ContactMeSlider } from "../../../Data/constants";
+import { ContactMeEmail } from "../../../Data/constants";
 
 type ContactMeProps = { isOpen: boolean; onClose: () => void };
 
