@@ -9,10 +9,10 @@ export const App = () => {
     <>
       <div className="App">
         <CommandBar /> {/* stays above, visible on all pages */}
-        {/* <Routes>
+        <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/todo" element={<TodoPage />} />
-        </Routes> */}
+        </Routes>
       </div>
     </>
   );
