@@ -17,7 +17,7 @@ export const GroupedTodos = (allTodos: Todo[]): Record<string, Todo[]> => {
   return {
     Today: allTodos
       .filter((t) => {
-        const due = normalizeDate(t.dueDate);
+        const due = normalizeDate(t.scheduledAt);
         return due && isToday(due);
       })
       .sort((a, b) => {
@@ -28,7 +28,7 @@ export const GroupedTodos = (allTodos: Todo[]): Record<string, Todo[]> => {
 
     Tomorrow: allTodos
       .filter((t) => {
-        const due = normalizeDate(t.dueDate);
+        const due = normalizeDate(t.scheduledAt);
         return due && isSameDay(due, addDays(new Date(), 1));
       })
       .sort((a, b) => {
@@ -38,7 +38,7 @@ export const GroupedTodos = (allTodos: Todo[]): Record<string, Todo[]> => {
       }),
 
     "This Week": allTodos.filter((t) => {
-      const due = normalizeDate(t.dueDate);
+      const due = normalizeDate(t.scheduledAt);
       return (
         due &&
         isWithinInterval(due, {
@@ -49,18 +49,18 @@ export const GroupedTodos = (allTodos: Todo[]): Record<string, Todo[]> => {
     }),
 
     "This Month": allTodos.filter((t) => {
-      const due = normalizeDate(t.dueDate);
+      const due = normalizeDate(t.scheduledAt);
       return (
         due &&
         isWithinInterval(due, {
-          start: addDays(new Date(), 2),
+          start: addDays(new Date(), 7),
           end: addDays(new Date(), 30),
         })
       );
     }),
 
     Upcoming: allTodos.filter((t) => {
-      const due = normalizeDate(t.dueDate);
+      const due = normalizeDate(t.scheduledAt);
       return !due || isAfter(due, addDays(new Date(), 31));
     }),
   };

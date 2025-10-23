@@ -77,11 +77,9 @@ export const AddTodoButton: React.FC<AddTodoButtonProps> = ({ onAdd }) => {
         setTags(tags);
         onClose();
 
-
         //update database
         try {
             const docRef = await addDoc(collection(db, "BrainBurrowTodos"), todo);
-            console.log("Added document with ID:", docRef.id);
             const newTododocRef = doc(db, "BrainBurrowTodos", docRef.id);
             const document = await getDoc(newTododocRef);
             if (document) {
@@ -91,7 +89,6 @@ export const AddTodoButton: React.FC<AddTodoButtonProps> = ({ onAdd }) => {
             const firebaseTodo: Todo = { ...todo, id: docRef.id };
             onAdd(firebaseTodo);
         } catch (err) {
-            console.error("Error adding todo:", err);
             toast({
                 title: "Error adding todo",
                 description: (err as Error).message,
@@ -182,12 +179,12 @@ export const AddTodoButton: React.FC<AddTodoButtonProps> = ({ onAdd }) => {
                                     p={2}
                                 >
                                     <DatePicker
-                                        selected={dueDate}
-                                        onChange={(date) => setDueDate(date ?? new Date())}
+                                        selected={scheduledAt}
+                                        onChange={(date) => setScheduledAt(date ?? undefined)}
                                         dateFormat="MMM d, yyyy"
                                         customInput={
                                             <Input
-                                                value={dueDate ? dueDate.toLocaleDateString() : ""}
+                                                value={scheduledAt ? scheduledAt.toLocaleDateString() : ""}
                                                 readOnly
                                                 color="white"
                                                 bg="transparent"

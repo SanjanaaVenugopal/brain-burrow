@@ -16,17 +16,6 @@ export enum ContactFormTexts {
   send = "Send",
 }
 
-export enum ContactMeSlider {
-  sliderHeader = "Drop your number!",
-  sliderValue = "Your number: ",
-  sliderClose = "Close",
-}
-
-export enum ContactMeClown {
-  header = "Just kidding! 🤡",
-  tagline = "I'm not storing your number.. 😛",
-}
-
 export enum ContactMeEmail {
   successHeader = "Message Sent!🎉",
   successTagline = "Thanks for reaching out. I'll get back to you soon!",
@@ -41,7 +30,7 @@ export enum Welcome {
 
 export enum TodoTexts {
   headline = "Amanscape",
-  tagline = "☁️Where plans pause, and peace begins!",
+  tagline = "Where plans pause, and peace begins!",
 }
 
 export const iconSize = 16;

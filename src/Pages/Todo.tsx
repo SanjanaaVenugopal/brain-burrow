@@ -83,7 +83,7 @@ export const TodoPage = () => {
                 <TodoViewToggle mode={mode} onChange={setMode} />
             </Box>
             {mode === "dashboard" ? (
-                <TodoDashboard groupedTodos={groupedTodos} toggleTodo={toggleTodo} />
+                <TodoDashboard groupedTodos={groupedTodos} toggleTodo={toggleTodo} setTodos={setTodos} />
             ) : (
                 <TodoCalendar todos={todos} onSelectDate={(d) => console.log(d)} />
             )}
