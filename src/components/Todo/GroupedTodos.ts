@@ -7,6 +7,7 @@ import {
   isAfter,
 } from "date-fns";
 import { Todo } from "./Todo.type";
+import { normalizeDate } from "./NormalizeDates";
 
 /**
  * Groups todos into logical time buckets
@@ -14,34 +15,40 @@ import { Todo } from "./Todo.type";
 export const GroupedTodos = (allTodos: Todo[]): Record<string, Todo[]> => {
   return {
     Today: allTodos
-      .filter((t) => t.dueDate && isToday(t.dueDate))
-      .sort((a, b) =>
-        a.scheduledAt && b.scheduledAt
-          ? a.scheduledAt.getTime() - b.scheduledAt.getTime()
-          : 0
-      ),
+      .filter((t) => {
+        const due = normalizeDate(t.dueDate);
+        return due && isToday(due);
+      })
+      .sort((a, b) => {
+        const aDate = normalizeDate(a.scheduledAt);
+        const bDate = normalizeDate(b.scheduledAt);
+        return aDate && bDate ? aDate.getTime() - bDate.getTime() : 0;
+      }),
 
     Tomorrow: allTodos
-      .filter((t) => t.dueDate && isSameDay(t.dueDate, addDays(new Date(), 1)))
-      .sort((a, b) =>
-        a.scheduledAt && b.scheduledAt
-          ? a.scheduledAt.getTime() - b.scheduledAt.getTime()
-          : 0
-      ),
+      .filter((t) => {
+        const due = normalizeDate(t.dueDate);
+        return due && isSameDay(due, addDays(new Date(), 1));
+      })
+      .sort((a, b) => {
+        const aDate = normalizeDate(a.scheduledAt);
+        const bDate = normalizeDate(b.scheduledAt);
+        return aDate && bDate ? aDate.getTime() - bDate.getTime() : 0;
+      }),
 
-    "This Week": allTodos.filter(
-      (t) => t.dueDate && isThisWeek(t.dueDate, { weekStartsOn: 1 })
-    ),
+    "This Week": allTodos.filter((t) => {
+      const due = normalizeDate(t.dueDate);
+      return due && isThisWeek(due, { weekStartsOn: 1 });
+    }),
 
-    "This Month": allTodos.filter(
-      (t) =>
-        t.dueDate &&
-        isThisMonth(t.dueDate) &&
-        !isThisWeek(t.dueDate, { weekStartsOn: 1 })
-    ),
+    "This Month": allTodos.filter((t) => {
+      const due = normalizeDate(t.dueDate);
+      return due && isThisMonth(due) && !isThisWeek(due, { weekStartsOn: 1 });
+    }),
 
-    Upcoming: allTodos.filter(
-      (t) => !t.dueDate || isAfter(t.dueDate, addDays(new Date(), 31))
-    ),
+    Upcoming: allTodos.filter((t) => {
+      const due = normalizeDate(t.dueDate);
+      return !due || isAfter(due, addDays(new Date(), 31));
+    }),
   };
 };

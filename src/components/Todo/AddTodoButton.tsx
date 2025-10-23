@@ -23,9 +23,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Todo } from "./Todo.type";
 import { isToday, isSameDay, addDays } from "date-fns";
 import { CloseButtonIcon } from "../HomePage/CommandBar/CloseButtonIcon";
+import { addDoc, collection, doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 type AddTodoButtonProps = {
-    onAdd: (todo: Partial<Todo>) => void;
+    onAdd: (todo: Todo) => void;
 };
 
 export const AddTodoButton: React.FC<AddTodoButtonProps> = ({ onAdd }) => {
@@ -34,10 +36,11 @@ export const AddTodoButton: React.FC<AddTodoButtonProps> = ({ onAdd }) => {
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [dueDate, setDueDate] = useState<Date | null>(new Date());
-    const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
+    const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+    const [scheduledAt, setScheduledAt] = useState<Date | undefined>(undefined);
+    const [tags, setTags] = useState<string[]>([]);
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
         if (!title.trim()) return;
 
         const isTodayOrTomorrow =
@@ -55,19 +58,49 @@ export const AddTodoButton: React.FC<AddTodoButtonProps> = ({ onAdd }) => {
             return;
         }
 
-        onAdd({
-            title,
-            description,
-            dueDate: dueDate ?? undefined,
-            scheduledAt: scheduledAt ?? undefined,
-        });
+        //Construct the todo object
+        let todo: Todo = {
+            id: "",
+            title: title.trim(),
+            description: description.trim(),
+            completed: false,
+            tags: tags ?? [],
+            ...(dueDate ? { dueDate } : {}),
+            ...(scheduledAt ? { scheduledAt } : {}),
+        };
 
         // reset form
         setTitle("");
         setDescription("");
-        setDueDate(new Date());
-        setScheduledAt(null);
+        setDueDate(undefined);
+        setScheduledAt(undefined);
+        setTags(tags);
         onClose();
+
+
+        //update database
+        try {
+            const docRef = await addDoc(collection(db, "BrainBurrowTodos"), todo);
+            console.log("Added document with ID:", docRef.id);
+            const newTododocRef = doc(db, "BrainBurrowTodos", docRef.id);
+            const document = await getDoc(newTododocRef);
+            if (document) {
+                await updateDoc(docRef, { id: docRef.id });
+            }
+
+            const firebaseTodo: Todo = { ...todo, id: docRef.id };
+            onAdd(firebaseTodo);
+        } catch (err) {
+            console.error("Error adding todo:", err);
+            toast({
+                title: "Error adding todo",
+                description: (err as Error).message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            onAdd(todo);
+        }
     };
 
     return (
@@ -177,7 +210,7 @@ export const AddTodoButton: React.FC<AddTodoButtonProps> = ({ onAdd }) => {
                                 >
                                     <DatePicker
                                         selected={scheduledAt}
-                                        onChange={(date) => setScheduledAt(date ?? null)}
+                                        onChange={(date) => setScheduledAt(date ?? undefined)}
                                         showTimeSelect
                                         showTimeSelectOnly
                                         timeIntervals={15}

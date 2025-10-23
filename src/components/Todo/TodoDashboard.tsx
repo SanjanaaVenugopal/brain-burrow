@@ -1,10 +1,11 @@
 import { Box, Heading, Checkbox, Flex, Text, Tag, TagLabel } from "@chakra-ui/react";
 import { Todo } from "./Todo.type";
 import { format } from "date-fns";
+import { normalizeDate } from "./NormalizeDates";
 
 type Props = {
     groupedTodos: Record<string, Todo[]>;
-    toggleTodo: (id: number) => void;
+    toggleTodo: (id: string) => void;
 };
 
 export const TodoDashboard: React.FC<Props> = ({ groupedTodos, toggleTodo }) => (
@@ -51,7 +52,7 @@ export const TodoDashboard: React.FC<Props> = ({ groupedTodos, toggleTodo }) => 
                             {/* Show scheduled time for Today & Tomorrow */}
                             {(group === "Today" || group === "Tomorrow") && todo.scheduledAt && (
                                 <Text fontSize="sm" opacity={0.7}>
-                                    🕒 {format(todo.scheduledAt, "hh:mm a")}
+                                    🕒 {todo.scheduledAt ? format(normalizeDate(todo.scheduledAt)!, "hh:mm a") : "-"}
                                 </Text>
                             )}
 

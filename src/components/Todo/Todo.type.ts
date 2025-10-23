@@ -1,5 +1,5 @@
 export type Todo = {
-  id: number;
+  id: string;
   title: string;
   completed: boolean;
   dueDate?: Date; // When it's due (used for grouping)

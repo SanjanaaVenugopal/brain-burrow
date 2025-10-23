@@ -49,3 +49,6 @@ npm install @chakra-ui/icons
    npm install react-calendar date-fns
    npm install react-datepicker
    npm install date-fns
+
+9. Firebase
+   npm install firebase
