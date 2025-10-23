@@ -5,6 +5,7 @@ import {
   isThisWeek,
   isThisMonth,
   isAfter,
+  isWithinInterval,
 } from "date-fns";
 import { Todo } from "./Todo.type";
 import { normalizeDate } from "./NormalizeDates";
@@ -38,12 +39,24 @@ export const GroupedTodos = (allTodos: Todo[]): Record<string, Todo[]> => {
 
     "This Week": allTodos.filter((t) => {
       const due = normalizeDate(t.dueDate);
-      return due && isThisWeek(due, { weekStartsOn: 1 });
+      return (
+        due &&
+        isWithinInterval(due, {
+          start: addDays(new Date(), 2),
+          end: addDays(new Date(), 7),
+        })
+      );
     }),
 
     "This Month": allTodos.filter((t) => {
       const due = normalizeDate(t.dueDate);
-      return due && isThisMonth(due) && !isThisWeek(due, { weekStartsOn: 1 });
+      return (
+        due &&
+        isWithinInterval(due, {
+          start: addDays(new Date(), 2),
+          end: addDays(new Date(), 30),
+        })
+      );
     }),
 
     Upcoming: allTodos.filter((t) => {
