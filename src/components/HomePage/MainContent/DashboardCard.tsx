@@ -2,7 +2,7 @@ import { Card, CardBody, Heading, Text, useColorModeValue } from "@chakra-ui/rea
 import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 
-const MotionCard = motion(Card);
+const MotionCard = motion.create(Card);
 
 type DashboardCardProps = {
     title: string;
