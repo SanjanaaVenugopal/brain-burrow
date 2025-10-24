@@ -12,7 +12,7 @@ import { GroupedTodos } from "./GroupedTodos";
 type TodoDashboardProps = {
 };
 
-export const TodoDashboard: React.FC<TodoDashboardProps> = ({ }) => {
+export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
     const toast = useToast();
     const dispatch = useDispatch<AppDispatch>();
 

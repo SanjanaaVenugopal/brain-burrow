@@ -5,12 +5,11 @@ import { TodoDashboard } from "../components/Todo/TodoDashboard";
 import { TodoCalendar } from "../components/Todo/TodoCalendar";
 import { Todo } from "../components/Todo/Todo.type";
 import { AddTodoButton } from "../components/Todo/AddTodoButton";
-import { GroupedTodos } from "../components/Todo/GroupedTodos";
 import { TodoHeader } from "../components/Todo/TodoHeader";
 import { Box, useToast } from "@chakra-ui/react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { setTodos, toggleTodo } from "../components/Todo/TodoSlice";
+import { setTodos } from "../components/Todo/TodoSlice";
 import type { RootState, AppDispatch } from "../store";
 import { normalizeDate } from "../components/Todo/NormalizeDates";
 

@@ -2,8 +2,6 @@ import {
   isSameDay,
   isToday,
   addDays,
-  isThisWeek,
-  isThisMonth,
   isAfter,
   isWithinInterval,
 } from "date-fns";
