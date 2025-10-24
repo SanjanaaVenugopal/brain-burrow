@@ -1,23 +1,34 @@
 import { Box, Heading, Checkbox, Flex, Text, Tag, TagLabel, IconButton, useToast } from "@chakra-ui/react";
-import { Todo } from "./Todo.type";
 import { format } from "date-fns";
 import { normalizeDate } from "./NormalizeDates";
 import { Edit2, Trash2 } from "lucide-react";
 import { deleteDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../store";
+import { deleteTodo, toggleTodo } from "./TodoSlice";
+import { GroupedTodos } from "./GroupedTodos";
 
-type Props = {
-    groupedTodos: Record<string, Todo[]>;
-    toggleTodo: (id: string) => void;
-    setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
+type TodoDashboardProps = {
 };
 
-export const TodoDashboard: React.FC<Props> = ({ groupedTodos, toggleTodo, setTodos }) => {
+export const TodoDashboard: React.FC<TodoDashboardProps> = ({ }) => {
     const toast = useToast();
+    const dispatch = useDispatch<AppDispatch>();
+
+    // Get todos from Redux instead of local state
+    const todos = useSelector((state: RootState) => state.todos.todos);
+
+    const groupedTodos = GroupedTodos(todos);
+
+    const handleToggle = (id: string) => {
+        dispatch(toggleTodo(id));
+    };
+
     const handleDelete = async (id: string) => {
         try {
             await deleteDoc(doc(db, "BrainBurrowTodos", id));
-            setTodos((prev) => prev.filter((t) => t.id !== id));
+            dispatch(deleteTodo(id))
         } catch (error) {
             console.error("Error deleting todo:", error);
             toast({
@@ -62,7 +73,7 @@ export const TodoDashboard: React.FC<Props> = ({ groupedTodos, toggleTodo, setTo
                                 {/* Checkbox */}
                                 <Checkbox
                                     isChecked={todo.completed}
-                                    onChange={() => toggleTodo(todo.id)}
+                                    onChange={() => handleToggle(todo.id)}
                                     flexShrink={0}
                                 />
 

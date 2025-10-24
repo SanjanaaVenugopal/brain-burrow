@@ -13,6 +13,7 @@ import { normalizeDate } from "./NormalizeDates";
 /**
  * Groups todos into logical time buckets
  */
+
 export const GroupedTodos = (allTodos: Todo[]): Record<string, Todo[]> => {
   return {
     Today: allTodos

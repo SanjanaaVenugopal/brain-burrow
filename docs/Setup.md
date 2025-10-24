@@ -52,3 +52,7 @@ npm install @chakra-ui/icons
 
 9. Firebase
    npm install firebase
+
+10. Redux
+   npm install @reduxjs/toolkit react-redux
+
