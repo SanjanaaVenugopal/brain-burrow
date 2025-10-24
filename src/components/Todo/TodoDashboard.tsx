@@ -133,21 +133,21 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                     <IconButton
                                         size="xs"
                                         variant="ghost"
-                                        colorScheme="gray"
                                         aria-label="Edit"
-                                        icon={<Edit2 size={14} />}
+                                        icon={<Edit2 size={14} className="text-purple-950 dark:text-white" />}
                                         onClick={() => {
                                             setEditingTodo(todo);
                                             onOpen();
                                         }}
+                                        className="!bg-transparent !border-none hover:opacity-80 transition"
                                     />
                                     <IconButton
                                         size="xs"
                                         variant="ghost"
-                                        colorScheme="red"
                                         aria-label="Delete"
-                                        icon={<Trash2 size={14} />}
+                                        icon={<Trash2 size={14} className="text-purple-950 dark:text-white" />}
                                         onClick={() => handleDelete(todo.id)}
+                                        className="!bg-transparent !border-none hover:opacity-80 transition"
                                     />
                                 </Flex>
                             </Flex>
