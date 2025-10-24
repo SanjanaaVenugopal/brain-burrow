@@ -9,7 +9,7 @@ import { TodoHeader } from "../components/Todo/TodoHeader";
 import { Box, useToast } from "@chakra-ui/react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { setTodos } from "../components/Todo/TodoSlice";
+import { addTodo, setTodos } from "../components/Todo/TodoSlice";
 import type { RootState, AppDispatch } from "../store";
 import { normalizeDate } from "../components/Todo/NormalizeDates";
 
@@ -61,7 +61,7 @@ export const TodoPage = () => {
                 <TodoCalendar todos={todos} onSelectDate={(d) => console.log(d)} />
             )}
             <AddTodoButton
-                onAdd={(todo) => dispatch(setTodos([...todos, todo]))}
+                onAdd={(todo) => dispatch(addTodo(todo))}
             />
         </>
     );
