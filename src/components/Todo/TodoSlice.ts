@@ -27,11 +27,10 @@ const todoSlice = createSlice({
       if (index !== -1) state.todos[index] = action.payload;
     },
     toggleTodo: (state, action: PayloadAction<string>) => {
-      state.todos.map((todo) =>
-        todo.id === action.payload
-          ? { ...todo, completed: !todo.completed }
-          : todo
-      );
+      const todo = state.todos.find((t) => t.id === action.payload);
+      if (todo) {
+        todo.completed = !todo.completed;
+      }
     },
   },
 });

@@ -2,7 +2,7 @@ import { Box, Heading, Checkbox, Flex, Text, Tag, TagLabel, IconButton, useToast
 import { format } from "date-fns";
 import { normalizeDate } from "./NormalizeDates";
 import { Edit2, Trash2 } from "lucide-react";
-import { deleteDoc, doc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store";
@@ -21,7 +21,13 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = ({ }) => {
 
     const groupedTodos = GroupedTodos(todos);
 
-    const handleToggle = (id: string) => {
+    const handleToggle = async (id: string) => {
+        //update database
+        const updatedTododocRef = doc(db, "BrainBurrowTodos", id);
+        const document = await getDoc(updatedTododocRef);
+        if (document) {
+            await updateDoc(updatedTododocRef, { completed: !document.data()?.completed });
+        }
         dispatch(toggleTodo(id));
     };
 
