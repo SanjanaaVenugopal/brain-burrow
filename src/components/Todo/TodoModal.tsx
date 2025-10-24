@@ -1,4 +1,4 @@
-import { Modal, Input, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Textarea, HStack, ModalFooter, Button, Box } from "@chakra-ui/react";
+import { Modal, Input, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Textarea, HStack, ModalFooter, Button, Box, FormErrorMessage } from "@chakra-ui/react";
 import DatePicker from "react-datepicker";
 import { useTodoForm } from "./useTodoForm";
 import { CloseButtonIcon } from "../HomePage/CommandBar/CloseButtonIcon";
@@ -29,7 +29,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({ isOpen, onClose, form, tit
 
                     <ModalBody display="flex" flexDir="column" gap={4}>
                         {/* Title */}
-                        <FormControl isRequired>
+                        <FormControl isRequired isInvalid={form.submitted && !form.title.trim()}>
                             <FormLabel className="!text-white/80 flex">Title</FormLabel>
                             <Input
                                 value={form.title}
@@ -41,6 +41,10 @@ export const TodoModal: React.FC<TodoModalProps> = ({ isOpen, onClose, form, tit
                                 _focus={{ borderColor: "whiteAlpha.700" }}
                                 className="!text-white/80 flex"
                             />
+
+                            <FormErrorMessage className="!text-red-400">
+                                Title is required.
+                            </FormErrorMessage>
                         </FormControl>
 
                         {/* Description */}

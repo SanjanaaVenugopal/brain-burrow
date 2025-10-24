@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Todo } from "./Todo.type";
 import { isToday, isSameDay, addDays } from "date-fns";
 import { useToast } from "@chakra-ui/react";
-import { addDoc, collection, doc, getDoc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { normalizeDate } from "./NormalizeDates";
 
@@ -18,6 +18,7 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
     const [description, setDescription] = useState(existingTodo?.description || "");
     const [scheduledAt, setScheduledAt] = useState<Date | undefined>(existingTodo?.scheduledAt);
     const [tags, setTags] = useState<string[]>(existingTodo?.tags || []);
+    const [submitted, setSubmitted] = useState(false);
 
     // Reset form whenever the editingTodo changes
     useEffect(() => {
@@ -38,6 +39,7 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
     };
 
     const handleSubmit = async () => {
+        setSubmitted(true);
         if (!title.trim()) return;
 
         const isTodayOrTomorrow =
@@ -97,5 +99,6 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
         setTags,
         handleSubmit,
         resetForm,
+        submitted
     };
 };
