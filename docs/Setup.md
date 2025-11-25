@@ -55,4 +55,3 @@ npm install @chakra-ui/icons
 
 10. Redux
    npm install @reduxjs/toolkit react-redux
-
