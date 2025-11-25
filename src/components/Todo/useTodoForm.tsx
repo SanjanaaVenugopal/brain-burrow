@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Todo } from "./Todo.type";
+import { RecurrencePattern, Todo } from "./Todo.type";
 import { isToday, isSameDay, addDays } from "date-fns";
 import { useToast } from "@chakra-ui/react";
 import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
@@ -19,14 +19,20 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
     const [scheduledAt, setScheduledAt] = useState<Date | undefined>(existingTodo?.scheduledAt);
     const [tags, setTags] = useState<string[]>(existingTodo?.tags || []);
     const [submitted, setSubmitted] = useState(false);
+    const [recurring, setRecurring] = useState<RecurrencePattern>(existingTodo?.recurring || { type: "none" });
+    const [recurringEndDate, setRecurringEndDate] = useState<Date | undefined>(
+        existingTodo?.recurringEndDate
+    );
 
     // Reset form whenever the editingTodo changes
     useEffect(() => {
         if (existingTodo) {
             setTitle(existingTodo?.title || "");
             setDescription(existingTodo?.description || "");
-            setScheduledAt(normalizeDate(normalizeDate(existingTodo?.scheduledAt)));
+            setScheduledAt(normalizeDate(existingTodo?.scheduledAt));
             setTags(existingTodo?.tags ?? []);
+            setRecurring(existingTodo?.recurring ?? { type: "none" })
+            setRecurringEndDate(normalizeDate(existingTodo?.recurringEndDate));
         }
     }, [existingTodo]);
 
@@ -36,6 +42,7 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
         setDescription("");
         setScheduledAt(undefined);
         setTags([]);
+        setRecurring({ type: "none" });
     };
 
     const handleSubmit = async () => {
@@ -62,6 +69,9 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
             description: description.trim(),
             completed: existingTodo?.completed || false,
             tags: tags ?? [],
+            // Recurrence
+            recurring: recurring?.type !== "none" ? recurring : { type: "none" },
+            ...(recurringEndDate ? { recurringEndDate } : {}),
             ...(scheduledAt ? { scheduledAt } : {}),
         };
 
@@ -97,6 +107,10 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
         setScheduledAt,
         tags,
         setTags,
+        recurring,
+        setRecurring,
+        recurringEndDate,
+        setRecurringEndDate,
         handleSubmit,
         resetForm,
         submitted

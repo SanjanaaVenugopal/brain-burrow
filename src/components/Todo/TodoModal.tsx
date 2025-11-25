@@ -2,6 +2,8 @@ import { Modal, Input, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormC
 import DatePicker from "react-datepicker";
 import { useTodoForm } from "./useTodoForm";
 import { CloseButtonIcon } from "../HomePage/CommandBar/CloseButtonIcon";
+import React from "react";
+import { RecurrencePattern } from "./Todo.type";
 
 type TodoModalProps = {
     isOpen: boolean;
@@ -12,6 +14,34 @@ type TodoModalProps = {
 };
 
 export const TodoModal: React.FC<TodoModalProps> = ({ isOpen, onClose, form, title = "Add a new Todo", submitLabel = "Add" }) => {
+    const [recurringEnabled, setRecurringEnabled] = React.useState(
+        form.recurring?.type !== "none"
+    );
+
+    const handleRecurrenceTypeChange = (newType: RecurrencePattern["type"]) => {
+        switch (newType) {
+            case "none":
+                form?.setRecurring({ type: "none" });
+                break;
+            case "daily":
+                form?.setRecurring({ type: "daily" });
+                break;
+            case "weekly":
+                form?.setRecurring({ type: "weekly", daysOfWeek: [] });
+                break;
+            case "monthly":
+                form?.setRecurring({ type: "monthly", dayOfMonth: 1 });
+                break;
+            case "yearly":
+                form?.setRecurring({ type: "yearly", month: 0, day: 1 });
+                break;
+            case "custom":
+                form?.setRecurring({ type: "custom", intervalDays: 1 });
+                break;
+        }
+    };
+
+
     return (
         <>
             <Modal isOpen={isOpen} onClose={onClose} isCentered size={{ base: "xs", md: "lg", lg: "xl" }}>
@@ -129,6 +159,116 @@ export const TodoModal: React.FC<TodoModalProps> = ({ isOpen, onClose, form, tit
                                 </Box>
                             </FormControl>
                         </HStack>
+                        {/* Recurrence Toggle */}
+                        <FormControl mt={4}>
+                            <HStack justify="space-between">
+                                <FormLabel className="!text-white/80">Recurring</FormLabel>
+                                <Button
+                                    size="sm"
+                                    onClick={() => setRecurringEnabled(!recurringEnabled)}
+                                    className="!text-white/80 !bg-transparent border border-white/30"
+                                >
+                                    {recurringEnabled ? "On" : "Off"}
+                                </Button>
+                            </HStack>
+                        </FormControl>
+
+                        {recurringEnabled && (
+                            <>
+                                {/* Recurrence Type */}
+                                <FormControl>
+                                    <FormLabel className="!text-white/80">Recurrence Type</FormLabel>
+                                    <select
+                                        className="w-full bg-transparent text-white/80 border border-white/20 p-2 rounded"
+                                        value={form?.recurring.type}
+                                        onChange={(e) => handleRecurrenceTypeChange(e.target.value as RecurrencePattern["type"])}
+                                    >
+                                        <option value="daily" className="!bg-zinc-600/70 hover:opacity-80 !m-0 !p-2">Daily</option>
+                                        <option value="weekly" className="!bg-zinc-600/70 hover:opacity-80 !m-0 !p-2">Weekly</option>
+                                        <option value="monthly" className="!bg-zinc-600/70 hover:opacity-80 !m-0 !p-2">Monthly</option>
+                                        <option value="yearly" className="!bg-zinc-600/70 hover:opacity-80 !m-0 !p-2">Yearly</option>
+                                        <option value="custom" className="!bg-zinc-600/70 hover:opacity-80 !m-0 !p-2">Custom (every N days)</option>
+                                    </select>
+                                </FormControl>
+
+                                {/* Weekly Days Selector */}
+                                {form?.recurring.type === "weekly" && (
+                                    <FormControl mt={3}>
+                                        <FormLabel className="!text-white/80">Days of Week</FormLabel>
+                                        <HStack wrap="wrap">
+                                            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                                                (label, index) => {
+                                                    const selected = (form?.recurring as any).daysOfWeek ?? [];
+                                                    const toggle = () => {
+                                                        const updated = selected.includes(index)
+                                                            ? selected.filter((d: number) => d !== index)
+                                                            : [...selected, index];
+                                                        form?.setRecurring({ type: "weekly", daysOfWeek: updated });
+                                                    };
+                                                    return (
+                                                        <Button
+                                                            key={index}
+                                                            size="xs"
+                                                            onClick={toggle}
+                                                            className={`!border !rounded-md !px-2 !py-1 ${selected.includes(index)
+                                                                    ? "!bg-white/30 !border-white !text-black"
+                                                                    : "!bg-transparent !border-white/30 !text-white/80"}`}
+                                                        >
+                                                            {label}
+                                                        </Button>
+                                                    );
+                                                }
+                                            )}
+                                        </HStack>
+                                    </FormControl>
+                                )}
+
+                                {/* Custom Interval */}
+                                {form?.recurring.type === "custom" && (
+                                    <FormControl mt={3}>
+                                        <FormLabel className="!text-white/80">Every N days</FormLabel>
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            value={(form?.recurring as any).intervalDays ?? ""}
+                                            onChange={(e) =>
+                                                form?.setRecurring({
+                                                    type: "custom",
+                                                    intervalDays: Number(e.target.value),
+                                                })
+                                            }
+                                            className="!text-white bg-transparent border-white/30"
+                                        />
+                                    </FormControl>
+                                )}
+
+                                {/* End Date Picker */}
+                                <FormControl mt={4}>
+                                    <FormLabel className="!text-white/80">Repeat Until</FormLabel>
+                                    <Box
+                                        bg="rgba(255,255,255,0.08)"
+                                        border="1px solid rgba(255,255,255,0.15)"
+                                        p={2}
+                                        rounded="lg"
+                                    >
+                                        <DatePicker
+                                            selected={form?.recurringEndDate}
+                                            onChange={(date) => form.setRecurringEndDate(date ?? undefined)}
+                                            dateFormat="MMM d, yyyy"
+                                            customInput={
+                                                <Input
+                                                    value={form?.recurringEndDate ? form?.recurringEndDate.toLocaleDateString() : ""}
+                                                    readOnly
+                                                    color="white"
+                                                    bg="transparent"
+                                                    border="none"
+                                                />
+                                            }
+                                        />
+                                    </Box>
+                                </FormControl>
+                            </>
+                        )}
                     </ModalBody>
 
                     <ModalFooter>
