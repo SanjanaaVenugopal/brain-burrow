@@ -165,7 +165,22 @@ export const TodoModal: React.FC<TodoModalProps> = ({ isOpen, onClose, form, tit
                                 <FormLabel className="!text-white/80">Recurring</FormLabel>
                                 <Button
                                     size="sm"
-                                    onClick={() => setRecurringEnabled(!recurringEnabled)}
+                                    onClick={() => {
+                                        const newEnabled = !recurringEnabled;
+                                        setRecurringEnabled(newEnabled);
+                                        if (!newEnabled) {
+                                            form?.setRecurring({ type: "none" });
+                                            form?.setRecurringEndDate(undefined);
+                                        } else {
+                                            // Restore existing recurrence type if editing, otherwise default to daily
+                                            const existingType = form.recurring?.type;
+                                            if (existingType && existingType !== "none") {
+                                                form?.setRecurring(form.recurring);
+                                            } else {
+                                                form?.setRecurring({ type: "daily" });
+                                            }
+                                        }
+                                    }}
                                     className="!text-white/80 !bg-transparent border border-white/30"
                                 >
                                     {recurringEnabled ? "On" : "Off"}

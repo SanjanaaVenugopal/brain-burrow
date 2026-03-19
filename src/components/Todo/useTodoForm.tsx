@@ -71,7 +71,7 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
             tags: tags ?? [],
             // Recurrence
             recurring: recurring?.type !== "none" ? recurring : { type: "none" },
-            ...(recurringEndDate ? { recurringEndDate } : {}),
+            ...(recurring?.type !== "none" && recurringEndDate ? { recurringEndDate } : {}),
             ...(scheduledAt ? { scheduledAt } : {}),
         };
 

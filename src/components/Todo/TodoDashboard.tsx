@@ -1,7 +1,7 @@
 import { Box, Heading, Checkbox, Flex, Text, Tag, TagLabel, IconButton, useToast, useDisclosure } from "@chakra-ui/react";
 import { format } from "date-fns";
 import { normalizeDate } from "./NormalizeDates";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, Repeat } from "lucide-react";
 import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useDispatch, useSelector } from "react-redux";
@@ -29,11 +29,18 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
     const groupedTodos = GroupedTodos(todos);
 
     const handleToggle = async (id: string) => {
-        //update database
-        const updatedTododocRef = doc(db, "BrainBurrowTodos", id);
-        const document = await getDoc(updatedTododocRef);
-        if (document) {
-            await updateDoc(updatedTododocRef, { completed: !document.data()?.completed });
+        try {
+            const updatedTododocRef = doc(db, "BrainBurrowTodos", id);
+            const document = await getDoc(updatedTododocRef);
+            if (document.exists()) {
+                const newCompleted = !document.data()?.completed;
+                await updateDoc(updatedTododocRef, {
+                    completed: newCompleted,
+                    completedAt: newCompleted ? new Date() : null,
+                });
+            }
+        } catch (err) {
+            console.error("Error updating Firestore:", err);
         }
         dispatch(toggleTodo(id));
     };
@@ -102,6 +109,9 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                         noOfLines={1}
                                     >
                                         {todo.title}
+                                        {((todo.recurring && todo.recurring.type !== "none") || todo.recurringBaseId) && (
+                                            <Repeat size={12} style={{ display: "inline-block", marginLeft: "6px", verticalAlign: "middle", opacity: 0.7 }} />
+                                        )}
                                     </Text>
 
                                     {(group === "Today" || group === "Tomorrow") && todo.scheduledAt && (
