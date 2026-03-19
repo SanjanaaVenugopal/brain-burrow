@@ -3,7 +3,7 @@ import {
     Box, Flex, Text, Heading, Checkbox, IconButton, Input, Button, useToast,
     useDisclosure,
 } from "@chakra-ui/react";
-import { Plus, Trash2, Edit2, GripVertical } from "lucide-react";
+import { Plus, Trash2, Edit2 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../store";
 import { Board, BoardTask } from "./Board.type";
@@ -30,7 +30,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
         state.boards.boards.find((b) => b.id === boardId)
     );
     const allTasks = useSelector((state: RootState) => state.boards.tasks);
-    const boardTasks = allTasks.filter((t) => t.boardId === boardId);
+    const boardTasks = useMemo(() => allTasks.filter((t) => t.boardId === boardId), [allTasks, boardId]);
 
     const [addingColumnName, setAddingColumnName] = useState("");
     const [isAddingColumn, setIsAddingColumn] = useState(false);
@@ -39,19 +39,6 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [modalColumnId, setModalColumnId] = useState<string | null>(null);
     const [editingTask, setEditingTask] = useState<BoardTask | null>(null);
-
-    // Convert a BoardTask to a Todo shape for the form
-    const editingAsTodo: Todo | undefined = useMemo(() => {
-        if (!editingTask) return undefined;
-        return {
-            id: editingTask.id,
-            title: editingTask.title,
-            description: editingTask.description,
-            completed: editingTask.completed,
-            scheduledAt: editingTask.scheduledAt ? normalizeDate(editingTask.scheduledAt) : undefined,
-            tags: editingTask.tags,
-        };
-    }, [editingTask]);
 
     const handleFormSuccess = async (todo: Todo) => {
         if (editingTask) {
@@ -83,10 +70,10 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                 columnId: modalColumnId,
                 title: todo.title,
                 completed: false,
-                description: todo.description,
-                scheduledAt: todo.scheduledAt,
-                tags: todo.tags,
+                description: todo.description || "",
+                tags: todo.tags || [],
                 order: colTasks.length,
+                ...(todo.scheduledAt ? { scheduledAt: todo.scheduledAt } : {}),
             };
             try {
                 const docRef = await addDoc(collection(db, "BrainBurrowBoardTasks"), task);
@@ -103,7 +90,6 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
     };
 
     const form = useTodoForm({
-        existingTodo: editingAsTodo,
         onSuccess: handleFormSuccess,
         skipFirestore: true,
     });
@@ -111,12 +97,21 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
     const openAddModal = (columnId: string) => {
         setEditingTask(null);
         setModalColumnId(columnId);
+        form.resetForm();
         onOpen();
     };
 
     const openEditModal = (task: BoardTask) => {
         setEditingTask(task);
         setModalColumnId(task.columnId);
+        form.loadTodo({
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            completed: task.completed,
+            scheduledAt: task.scheduledAt ? normalizeDate(task.scheduledAt) : undefined,
+            tags: task.tags,
+        });
         onOpen();
     };
 
@@ -246,7 +241,6 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                                     role="group"
                                     gap={2}
                                 >
-                                    <GripVertical size={12} opacity={0.3} style={{ flexShrink: 0 }} />
                                     <Checkbox
                                         isChecked={task.completed}
                                         onChange={() => handleToggleTask(task)}

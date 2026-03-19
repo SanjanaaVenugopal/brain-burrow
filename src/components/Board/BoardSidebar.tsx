@@ -7,7 +7,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../store";
 import { addBoard, deleteBoard } from "./BoardSlice";
 import { Board } from "./Board.type";
-import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 
 type Props = {
@@ -17,6 +17,7 @@ type Props = {
 
 export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
     const boards = useSelector((state: RootState) => state.boards.boards);
+    const allTasks = useSelector((state: RootState) => state.boards.tasks);
     const dispatch = useDispatch<AppDispatch>();
     const toast = useToast();
 
@@ -44,15 +45,11 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
 
     const handleDelete = async (boardId: string) => {
         try {
-            // Delete all tasks for this board
-            const tasksSnap = await getDocs(collection(db, "BrainBurrowBoardTasks"));
-            const batch: Promise<void>[] = [];
-            tasksSnap.docs.forEach((d) => {
-                if (d.data().boardId === boardId) {
-                    batch.push(deleteDoc(doc(db, "BrainBurrowBoardTasks", d.id)));
-                }
-            });
-            await Promise.all(batch);
+            // Delete tasks for this board using Redux state (no extra Firestore read)
+            const tasksToDelete = allTasks.filter((t) => t.boardId === boardId);
+            await Promise.all(
+                tasksToDelete.map((t) => deleteDoc(doc(db, "BrainBurrowBoardTasks", t.id)))
+            );
             await deleteDoc(doc(db, "BrainBurrowBoards", boardId));
             dispatch(deleteBoard(boardId));
             if (activeBoardId === boardId) onSelect(null);

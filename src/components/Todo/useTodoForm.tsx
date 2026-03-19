@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { RecurrencePattern, Todo } from "./Todo.type";
 import { isToday, isSameDay, addDays } from "date-fns";
 import { useToast } from "@chakra-ui/react";
@@ -25,25 +25,24 @@ export const useTodoForm = ({ existingTodo, onSuccess, skipFirestore }: UseTodoF
         existingTodo?.recurringEndDate
     );
 
-    // Reset form whenever the editingTodo changes
-    useEffect(() => {
-        if (existingTodo) {
-            setTitle(existingTodo?.title || "");
-            setDescription(existingTodo?.description || "");
-            setScheduledAt(normalizeDate(existingTodo?.scheduledAt));
-            setTags(existingTodo?.tags ?? []);
-            setRecurring(existingTodo?.recurring ?? { type: "none" })
-            setRecurringEndDate(normalizeDate(existingTodo?.recurringEndDate));
-        }
-    }, [existingTodo]);
-
-
     const resetForm = () => {
         setTitle("");
         setDescription("");
         setScheduledAt(undefined);
         setTags([]);
         setRecurring({ type: "none" });
+        setRecurringEndDate(undefined);
+        setSubmitted(false);
+    };
+
+    const loadTodo = (todo: Todo) => {
+        setTitle(todo.title || "");
+        setDescription(todo.description || "");
+        setScheduledAt(normalizeDate(todo.scheduledAt));
+        setTags(todo.tags ?? []);
+        setRecurring(todo.recurring ?? { type: "none" });
+        setRecurringEndDate(normalizeDate(todo.recurringEndDate));
+        setSubmitted(false);
     };
 
     const handleSubmit = async () => {
@@ -118,6 +117,7 @@ export const useTodoForm = ({ existingTodo, onSuccess, skipFirestore }: UseTodoF
         setRecurringEndDate,
         handleSubmit,
         resetForm,
+        loadTodo,
         submitted
     };
 };
