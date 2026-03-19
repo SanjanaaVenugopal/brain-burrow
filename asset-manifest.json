@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/brain-burrow/static/css/main.ea215719.css",
-    "main.js": "/brain-burrow/static/js/main.a1d2baa2.js",
+    "main.js": "/brain-burrow/static/js/main.cb7d7909.js",
     "index.html": "/brain-burrow/index.html",
     "main.ea215719.css.map": "/brain-burrow/static/css/main.ea215719.css.map",
-    "main.a1d2baa2.js.map": "/brain-burrow/static/js/main.a1d2baa2.js.map"
+    "main.cb7d7909.js.map": "/brain-burrow/static/js/main.cb7d7909.js.map"
   },
   "entrypoints": [
     "static/css/main.ea215719.css",
-    "static/js/main.a1d2baa2.js"
+    "static/js/main.cb7d7909.js"
   ]
 }
