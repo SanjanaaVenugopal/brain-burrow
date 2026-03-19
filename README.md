@@ -1,46 +1,88 @@
-# Getting Started with Create React App
+# Brain Burrow
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A personal productivity app built with React and TypeScript, featuring a smart todo system with recurring tasks and an interactive calendar view.
 
-## Available Scripts
+**Live:** [sanjanaavenugopal.github.io/brain-burrow](https://sanjanaavenugopal.github.io/brain-burrow)
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+### Todo Dashboard (Amanscape)
+- Create, edit, and delete todos with title, description, tags, and scheduled date/time
+- Tasks grouped by **Overdue**, **Today**, **Tomorrow**, **This Week**, **This Month**, and **Upcoming**
+- Enforce time selection for today/tomorrow tasks
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Recurring Todos
+- Supports **daily**, **weekly** (specific days), **monthly**, **yearly**, and **custom interval** recurrence
+- Virtual instance generation -- only one document stored per recurring todo
+- Completions tracked via a map on the base document (no instance bloat)
+- Edit recurring todos with **All Instances** or **Just Today** options
+- Override documents for single-day modifications
+- Optional recurring end date
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Calendar View
+- Monthly calendar with task previews on each day (up to 2 titles + more count)
+- Click any date to see all tasks for that day in a detail modal
+- Visual indicators: today ring, task dots, hover glow, weekend shading
+- Animated month transitions
 
-### `npm test`
+### Homepage
+- Command bar with navigation, resume link, and contact form
+- Contact form powered by EmailJS
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Tech Stack
 
-### `npm run build`
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 + TypeScript |
+| UI | Chakra UI v2 + Tailwind CSS v3 |
+| State | Redux Toolkit |
+| Backend | Firebase Firestore |
+| Icons | Lucide React |
+| Dates | date-fns + react-datepicker + react-calendar |
+| Routing | React Router v7 |
+| Deployment | GitHub Pages (gh-pages) |
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Getting Started
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Prerequisites
+- Node.js >= 18
+- npm
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Install and Run
 
-### `npm run eject`
+```bash
+npm install
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Opens at http://localhost:3000/brain-burrow
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Build and Deploy
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```bash
+npm run build
+npm run deploy
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Project Structure
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+src/
+  Pages/
+    Home.tsx              # Landing page
+    Todo.tsx              # Todo page (fetches from Firestore)
+  components/
+    HomePage/             # Command bar, contact form, theme
+    Todo/
+      Todo.type.ts        # Core types (Todo, DisplayTodo, RecurrencePattern)
+      TodoSlice.ts        # Redux slice
+      computeInstances.ts # Virtual recurring instance generation
+      GroupedTodos.ts     # Time-bucket grouping logic
+      TodoDashboard.tsx   # Dashboard view
+      TodoCalendar.tsx    # Calendar view
+      TodoModal.tsx       # Add/edit modal
+      useTodoForm.tsx     # Form state hook
+      NormalizeDates.tsx  # Date format normalizer
+  Data/
+    constants.ts          # App text constants
+```
