@@ -169,26 +169,27 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
         }
     };
 
-    // Build enriched editing todo for the form
-    const enrichedEditingTodo = React.useMemo(() => {
-        if (!editingTodo) return undefined;
-        if (editingTodo._baseId) {
-            const baseTodo = todos.find((t) => t.id === editingTodo._baseId);
+    const form = useTodoForm({
+        onSuccess: handleEditSubmit,
+    });
+
+    // Build enriched todo and load it into the form
+    const openEditFor = (todo: DisplayTodo) => {
+        setEditingTodo(todo);
+        let enriched: Todo = todo;
+        if (todo._baseId) {
+            const baseTodo = todos.find((t) => t.id === todo._baseId);
             if (baseTodo) {
-                return {
-                    ...editingTodo,
+                enriched = {
+                    ...todo,
                     recurring: baseTodo.recurring,
                     recurringEndDate: baseTodo.recurringEndDate,
                 };
             }
         }
-        return editingTodo as Todo;
-    }, [editingTodo, todos]);
-
-    const form = useTodoForm({
-        onSuccess: handleEditSubmit,
-        existingTodo: enrichedEditingTodo,
-    });
+        form.loadTodo(enriched);
+        onOpen();
+    };
 
     return (
         <>
@@ -215,9 +216,10 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                 borderRadius="md"
                                 _hover={{ bg: "whiteAlpha.200" }}
                                 role="group"
-                                transition="background 0.2s ease"
+                                transition="all 0.2s ease"
                                 justify="flex-start"
                                 gap={3}
+                                opacity={todo.completed ? 0.45 : 1}
                                 key={todo._virtualDate ? `${todo._baseId}::${todo._virtualDate}` : todo.id}
                             >
                                 <Checkbox
@@ -267,10 +269,7 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                         variant="ghost"
                                         aria-label="Edit"
                                         icon={<Edit2 size={14} className="text-purple-950 dark:text-white" />}
-                                        onClick={() => {
-                                            setEditingTodo(todo);
-                                            onOpen();
-                                        }}
+                                        onClick={() => openEditFor(todo)}
                                         className="!bg-transparent !border-none hover:opacity-80 transition"
                                     />
                                     {!todo._virtualDate && (
