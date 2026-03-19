@@ -18,6 +18,11 @@ export const TodoModal: React.FC<TodoModalProps> = ({ isOpen, onClose, form, tit
         form.recurring?.type !== "none"
     );
 
+    // Sync recurringEnabled when form.recurring changes (e.g., opening edit modal)
+    React.useEffect(() => {
+        setRecurringEnabled(form.recurring?.type !== "none");
+    }, [form.recurring]);
+
     const handleRecurrenceTypeChange = (newType: RecurrencePattern["type"]) => {
         switch (newType) {
             case "none":
