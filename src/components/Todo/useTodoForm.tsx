@@ -9,9 +9,10 @@ import { normalizeDate } from "./NormalizeDates";
 type UseTodoFormProps = {
     existingTodo?: Todo; // for editing
     onSuccess: (todo: Todo) => void;
+    skipFirestore?: boolean; // skip writing to BrainBurrowTodos (used by board tasks)
 };
 
-export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
+export const useTodoForm = ({ existingTodo, onSuccess, skipFirestore }: UseTodoFormProps) => {
     const toast = useToast();
 
     const [title, setTitle] = useState(existingTodo?.title || "");
@@ -77,9 +78,8 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
             ...(existingTodo?.completions ? { completions: existingTodo.completions } : {}),
         };
 
-        if (existingTodo) {
-            // For edits, let the parent handle Firestore writes
-            // (supports "All instances" vs "Just today" for recurring)
+        if (existingTodo || skipFirestore) {
+            // For edits or board tasks, let the parent handle Firestore writes
             onSuccess(todo);
             resetForm();
             return;
