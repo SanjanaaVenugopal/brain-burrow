@@ -16,6 +16,16 @@ export const AddTodoButton: React.FC<AddTodoButtonProps> = ({ onAdd }) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const form = useTodoForm({ onSuccess: (todo) => { onAdd(todo); onClose(); } });
 
+    const handleOpen = () => {
+        form.resetForm();
+        const now = new Date();
+        // Round up to next 15-minute mark
+        const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+        now.setMinutes(minutes, 0, 0);
+        form.setScheduledAt(now);
+        onOpen();
+    };
+
     return (
         <>
             {/* Floating Add Button */}
@@ -35,7 +45,7 @@ export const AddTodoButton: React.FC<AddTodoButtonProps> = ({ onAdd }) => {
                     transform: "scale(1.1)",
                     transition: "0.2s",
                 }}
-                onClick={onOpen}
+                onClick={handleOpen}
             />
 
             <TodoModal isOpen={isOpen} onClose={onClose} form={form} title="Add a new Todo" submitLabel="Add" />
