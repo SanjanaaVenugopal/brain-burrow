@@ -123,7 +123,8 @@ export const TodoCalendar: React.FC = () => {
 
     const handleEditJustToday = async (todo: Todo) => {
         if (!editingTodo?._virtualDate || !editingTodo?._baseId) return;
-        const overrideDoc: Todo = { ...todo, id: "", overrideOf: editingTodo._baseId, overrideDate: editingTodo._virtualDate, completed: editingTodo.completed };
+        const { recurringEndDate: _re, completions: _c, ...rest } = todo;
+        const overrideDoc: Todo = { ...rest, id: "", overrideOf: editingTodo._baseId, overrideDate: editingTodo._virtualDate, completed: editingTodo.completed, recurring: { type: "none" } };
         try {
             const docRef = await addDoc(collection(db, "BrainBurrowTodos"), overrideDoc);
             await updateDoc(docRef, { id: docRef.id });
@@ -138,20 +139,21 @@ export const TodoCalendar: React.FC = () => {
             onEditClose();
             onAlertOpen();
         } else {
+            const updatedTodo = { ...todo, id: editingTodo!.id };
             try {
-                await updateDoc(doc(db, "BrainBurrowTodos", todo.id), {
+                await updateDoc(doc(db, "BrainBurrowTodos", editingTodo!.id), {
                     title: todo.title, description: todo.description || "", tags: todo.tags || [],
                     scheduledAt: todo.scheduledAt || null, recurring: todo.recurring,
                     ...(todo.recurringEndDate ? { recurringEndDate: todo.recurringEndDate } : {}),
                 });
             } catch (err) { toast({ title: "Error updating", description: (err as Error).message, status: "error", duration: 3000, isClosable: true }); }
-            dispatch(updateTodo(todo));
+            dispatch(updateTodo(updatedTodo));
             onEditClose();
             setEditingTodo(undefined);
         }
     };
 
-    const editForm = useTodoForm({ onSuccess: handleEditSubmit });
+    const editForm = useTodoForm({ onSuccess: handleEditSubmit, skipFirestore: true });
 
     const openEditFor = (todo: DisplayTodo) => {
         setEditingTodo(todo);

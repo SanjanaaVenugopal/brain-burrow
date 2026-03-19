@@ -124,12 +124,14 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
     // Called when "Just today" is chosen — create an override doc
     const handleEditJustToday = async (todo: Todo) => {
         if (!editingTodo?._virtualDate || !editingTodo?._baseId) return;
+        const { recurringEndDate: _re, completions: _c, ...rest } = todo;
         const overrideDoc: Todo = {
-            ...todo,
+            ...rest,
             id: "",
             overrideOf: editingTodo._baseId,
             overrideDate: editingTodo._virtualDate,
             completed: editingTodo.completed,
+            recurring: { type: "none" },
         };
         try {
             const docRef = await addDoc(collection(db, "BrainBurrowTodos"), overrideDoc);
@@ -150,8 +152,9 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
             onAlertOpen(); // open choice dialog
         } else {
             // Regular todo — update directly in Firestore + Redux
+            const updatedTodo = { ...todo, id: editingTodo!.id };
             try {
-                const docRef = doc(db, "BrainBurrowTodos", todo.id);
+                const docRef = doc(db, "BrainBurrowTodos", editingTodo!.id);
                 await updateDoc(docRef, {
                     title: todo.title,
                     description: todo.description || "",
@@ -163,7 +166,7 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
             } catch (err) {
                 toast({ title: "Error updating", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
             }
-            dispatch(updateTodo(todo));
+            dispatch(updateTodo(updatedTodo));
             onClose();
             setEditingTodo(undefined);
         }
@@ -171,6 +174,7 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
 
     const form = useTodoForm({
         onSuccess: handleEditSubmit,
+        skipFirestore: true,
     });
 
     // Build enriched todo and load it into the form
