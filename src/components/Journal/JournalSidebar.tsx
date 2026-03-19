@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
     Box, Flex, Text, IconButton, Input, Button, useToast, VStack, Tooltip,
 } from "@chakra-ui/react";
-import { FileText, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../store";
 import { addEntry, deleteEntry } from "./JournalSlice";
@@ -57,17 +57,17 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
             <Box
                 position="fixed"
                 left="0"
-                top="60px"
+                top="0"
                 bottom="0"
                 w="48px"
-                bg="rgba(30, 20, 50, 0.6)"
-                backdropFilter="blur(12px)"
-                borderRight="1px solid rgba(255,255,255,0.1)"
-                zIndex={20}
+                className="bg-white/30 dark:bg-[rgba(30,20,50,0.45)] border-r border-white/30 dark:border-white/10 shadow-[inset_0_0_30px_rgba(255,255,255,0.08)]"
+                backdropFilter="blur(20px)"
+                style={{ WebkitBackdropFilter: "blur(20px)" }}
+                zIndex={51}
                 display="flex"
                 flexDir="column"
                 alignItems="center"
-                pt={3}
+                pt="72px"
                 gap={2}
             >
                 <IconButton
@@ -75,8 +75,8 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
                     icon={<ChevronRight size={16} />}
                     size="xs"
                     variant="ghost"
-                    color="white"
-                    _hover={{ bg: "whiteAlpha.200" }}
+                    className="!text-purple-700 dark:!text-white"
+                    _hover={{ bg: "transparent" }}
                     onClick={() => setCollapsed(false)}
                 />
                 {entries.map((e) => (
@@ -88,11 +88,12 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
                             alignItems="center"
                             justifyContent="center"
                             cursor="pointer"
-                            bg={activeEntryId === e.id ? "purple.600" : "whiteAlpha.100"}
-                            color="white"
+                            className={activeEntryId === e.id
+                                ? "bg-purple-600 text-white"
+                                : "bg-purple-100 dark:bg-white/10 text-purple-700 dark:text-white"}
                             fontSize="xs"
                             fontWeight="bold"
-                            _hover={{ bg: "purple.500" }}
+                            _hover={{ bg: "purple.500", color: "white" }}
                             onClick={() => onSelect(e.id)}
                         >
                             {e.title.charAt(0).toUpperCase()}
@@ -105,8 +106,8 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
                         icon={<Plus size={16} />}
                         size="sm"
                         variant="ghost"
-                        color="whiteAlpha.500"
-                        _hover={{ bg: "whiteAlpha.200", color: "white" }}
+                        className="!text-purple-700 dark:!text-white/50"
+                        _hover={{ bg: "transparent" }}
                         onClick={() => { setCollapsed(false); setIsAdding(true); }}
                     />
                 </Tooltip>
@@ -118,20 +119,21 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
         <Box
             position="fixed"
             left="0"
-            top="60px"
+            top="0"
             bottom="0"
             w="220px"
-            bg="rgba(30, 20, 50, 0.6)"
-            backdropFilter="blur(12px)"
-            borderRight="1px solid rgba(255,255,255,0.1)"
-            zIndex={20}
+            className="bg-white/30 dark:bg-[rgba(30,20,50,0.45)] border-r border-white/30 dark:border-white/10 shadow-[inset_0_0_30px_rgba(255,255,255,0.08)]"
+            backdropFilter="blur(20px)"
+            style={{ WebkitBackdropFilter: "blur(20px)" }}
+            zIndex={51}
             display="flex"
             flexDir="column"
             overflowY="auto"
+            pt="60px"
         >
             {/* Header */}
             <Flex align="center" justify="space-between" px={3} pt={3} pb={2}>
-                <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider" className="!text-white/40">
+                <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider" className="!text-purple-700 dark:!text-white/70">
                     Journal
                 </Text>
                 <IconButton
@@ -139,8 +141,8 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
                     icon={<ChevronLeft size={16} />}
                     size="xs"
                     variant="ghost"
-                    color="white"
-                    _hover={{ bg: "whiteAlpha.200" }}
+                    className="!text-purple-900 dark:!text-white"
+                    _hover={{ bg: "purple.100" }}
                     onClick={() => setCollapsed(true)}
                 />
             </Flex>
@@ -157,28 +159,41 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
                         rounded="lg"
                         cursor="pointer"
                         bg={activeEntryId === entry.id ? "purple.600" : "transparent"}
-                        _hover={{ bg: activeEntryId === entry.id ? "purple.600" : "whiteAlpha.100" }}
+                        className={activeEntryId === entry.id ? "" : "hover:bg-purple-100/60 dark:hover:bg-white/10"}
                         transition="background 0.15s"
                         onClick={() => onSelect(entry.id)}
                         role="group"
                     >
-                        <FileText size={14} opacity={0.6} style={{ flexShrink: 0 }} />
+                        <Box
+                            w="24px" h="24px" minW="24px"
+                            rounded="md"
+                            className={activeEntryId === entry.id
+                                ? "bg-white/20"
+                                : "bg-purple-200 dark:bg-white/20"}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                        >
+                            <Text className={activeEntryId === entry.id ? "!text-white" : "!text-purple-700 dark:!text-white"} fontSize="xs" fontWeight="bold">
+                                {entry.title.charAt(0).toUpperCase()}
+                            </Text>
+                        </Box>
                         <Box flex={1} minW={0}>
-                            <Text fontSize="sm" className="!text-white/80" noOfLines={1}
-                                fontWeight={activeEntryId === entry.id ? "semibold" : "normal"}>
+                            <Text fontSize="sm" noOfLines={1}
+                                className={activeEntryId === entry.id ? "!text-white !font-semibold" : "!text-purple-900 dark:!text-white/80"}
+                            >
                                 {entry.title}
                             </Text>
-                            <Text fontSize="2xs" className="!text-white/30">
+                            <Text fontSize="2xs" className={activeEntryId === entry.id ? "!text-white/60" : "!text-purple-400 dark:!text-white/30"}>
                                 {format(new Date(entry.updatedAt), "MMM d")}
                             </Text>
                         </Box>
                         <IconButton
                             aria-label="Delete entry"
-                            icon={<Trash2 size={12} />}
+                            icon={<Trash2 size={14} className="text-purple-950 dark:text-white" />}
                             size="xs"
                             variant="ghost"
-                            color="whiteAlpha.400"
-                            _hover={{ color: "red.300", bg: "whiteAlpha.200" }}
+                            className="!bg-transparent !border-none hover:opacity-80 transition"
                             opacity={0}
                             _groupHover={{ opacity: 1 }}
                             onClick={(e) => { e.stopPropagation(); handleDelete(entry.id); }}
@@ -195,10 +210,8 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                            bg="whiteAlpha.100"
+                            className="!bg-purple-50 dark:!bg-white/10 !text-purple-900 dark:!text-white !border-purple-200 dark:!border-white/20 !placeholder-purple-400 dark:!placeholder-white/40"
                             border="1px solid"
-                            borderColor="whiteAlpha.200"
-                            className="!text-white"
                             rounded="lg"
                             autoFocus
                         />
@@ -206,7 +219,7 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
                             <Button size="xs" colorScheme="purple" onClick={handleAdd} flex={1}>
                                 Create
                             </Button>
-                            <Button size="xs" variant="ghost" className="!text-white/60"
+                            <Button size="xs" variant="ghost" className="!text-purple-500 dark:!text-white/60"
                                 onClick={() => { setIsAdding(false); setNewTitle(""); }}>
                                 Cancel
                             </Button>
@@ -220,12 +233,12 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
                         py={2}
                         rounded="lg"
                         cursor="pointer"
-                        _hover={{ bg: "whiteAlpha.100" }}
+                        className="hover:bg-purple-100/60 dark:hover:bg-white/10"
                         transition="background 0.15s"
                         onClick={() => setIsAdding(true)}
                     >
-                        <Plus size={16} opacity={0.5} />
-                        <Text fontSize="sm" className="!text-white/40">
+                        <Plus size={16} className="text-purple-600 dark:text-white/70" />
+                        <Text fontSize="sm" className="!text-purple-600 dark:!text-white/70">
                             New Entry
                         </Text>
                     </Flex>

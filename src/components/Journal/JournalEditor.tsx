@@ -95,22 +95,22 @@ export const JournalEditor: React.FC<Props> = ({ entryId }) => {
         <Box maxW="800px" mx="auto" px={4} pt={4}>
             {/* Header bar */}
             <Flex align="center" justify="space-between" mb={4}>
-                <Flex align="center" gap={2} className="!text-white/30" fontSize="xs">
+                <Flex align="center" gap={2} className="!text-purple-700 dark:!text-white/50" fontSize="xs">
                     <Clock size={12} />
                     {lastSaved ? (
                         <Text>Saved {format(lastSaved, "hh:mm a")}</Text>
                     ) : (
                         <Text>Not saved yet</Text>
                     )}
-                    {saving && <Text className="!text-purple-300">Saving...</Text>}
+                    {saving && <Text className="!text-purple-500 dark:!text-purple-300">Saving...</Text>}
                 </Flex>
                 <IconButton
                     aria-label="Save"
                     icon={<Save size={16} />}
                     size="sm"
                     variant="ghost"
-                    color="whiteAlpha.600"
-                    _hover={{ color: "white", bg: "whiteAlpha.200" }}
+                    className="!text-purple-500 dark:!text-white/60"
+                    _hover={{ bg: "transparent" }}
                     onClick={handleSave}
                     isLoading={saving}
                 />
@@ -124,10 +124,12 @@ export const JournalEditor: React.FC<Props> = ({ entryId }) => {
                 variant="unstyled"
                 fontSize="3xl"
                 fontWeight="bold"
-                className="!text-white"
+                className="!text-purple-950 dark:!text-white"
                 placeholder="Untitled"
                 mb={4}
-                _placeholder={{ color: "whiteAlpha.300" }}
+                _placeholder={{ color: "var(--placeholder-color)" }}
+                sx={{ "--placeholder-color": "rgba(88, 28, 135, 0.3)" }}
+                _dark={{ sx: { "--placeholder-color": "rgba(255,255,255,0.3)" } }}
             />
 
             {/* Content area */}
@@ -145,16 +147,17 @@ export const JournalEditor: React.FC<Props> = ({ entryId }) => {
                 resize="none"
                 fontSize="md"
                 lineHeight="1.8"
-                className="!text-white/80"
+                className="!text-purple-900 dark:!text-white/80"
                 sx={{
-                    "&::placeholder": { color: "whiteAlpha.300" },
+                    "&::placeholder": { color: "rgba(88, 28, 135, 0.3)" },
                     "&:focus": { outline: "none" },
+                    ".dark &::placeholder": { color: "rgba(255,255,255,0.3)" },
                 }}
             />
 
             {/* Word count */}
             <Flex justify="flex-end" py={4}>
-                <Text fontSize="xs" className="!text-white/20">
+                <Text fontSize="xs" className="!text-purple-300 dark:!text-white/20">
                     {content.split(/\s+/).filter(Boolean).length} words
                 </Text>
             </Flex>

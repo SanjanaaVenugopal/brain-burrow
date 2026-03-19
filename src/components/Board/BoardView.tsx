@@ -180,14 +180,16 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
 
     return (
         <Box>
-            <Heading fontSize="2xl" mb={1} className="!text-white">
-                {board.name}
-            </Heading>
-            <Text fontSize="sm" className="!text-white/40" mb={6}>
-                {board.columns.length} column{board.columns.length !== 1 ? "s" : ""} · {boardTasks.length} task{boardTasks.length !== 1 ? "s" : ""}
-            </Text>
+            <div className="w-full flex justify-center">
+                <div className="flex flex-col items-center text-center max-w-3xl w-full">
+                    <h1 className="text-4xl md:text-5xl font-bold italic">{board.name}</h1>
+                    <p className="text-base md:text-lg mt-2 text-purple-950/40 dark:text-white/40">
+                        {board.columns.length} column{board.columns.length !== 1 ? "s" : ""} · {boardTasks.length} task{boardTasks.length !== 1 ? "s" : ""}
+                    </p>
+                </div>
+            </div>
 
-            <Flex gap={5} overflowX="auto" pb={4} align="flex-start">
+            <Flex gap={5} overflowX="auto" pb={4} pt={6} align="flex-start">
                 {board.columns.map((col) => {
                     const colTasks = boardTasks
                         .filter((t) => t.columnId === col.id)
@@ -198,30 +200,30 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                             key={col.id}
                             minW="300px"
                             maxW="340px"
-                            bg="rgba(120, 81, 169, 0.25)"
+                            className="bg-purple-300/50 dark:bg-[rgba(120,81,169,0.25)] border border-purple-400/30 dark:border-white/15"
                             backdropFilter="blur(10px)"
-                            border="1px solid rgba(255,255,255,0.15)"
                             rounded="2xl"
                             p={4}
                             shadow="md"
                             flexShrink={0}
                         >
                             {/* Column header */}
-                            <Flex align="center" justify="space-between" mb={3}>
+                            <Flex align="center" justify="space-between" mb={3} role="group">
                                 <Heading fontSize="lg">
                                     {col.name}
                                 </Heading>
-                                <Flex gap={1}>
-                                    <Text fontSize="xs" className="!text-white/40" mt={1}>
+                                <Flex gap={1} align="center">
+                                    <Text fontSize="xs" className="!text-purple-950/40 dark:!text-white/40" mt={1}>
                                         {colTasks.length}
                                     </Text>
                                     <IconButton
                                         aria-label="Delete column"
-                                        icon={<Trash2 size={12} />}
+                                        icon={<Trash2 size={14} className="text-purple-950 dark:text-white" />}
                                         size="xs"
                                         variant="ghost"
-                                        color="whiteAlpha.400"
-                                        _hover={{ color: "red.300" }}
+                                        className="!bg-transparent !border-none hover:opacity-80 transition"
+                                        opacity={0}
+                                        _groupHover={{ opacity: 1 }}
                                         onClick={() => handleDeleteColumn(col.id)}
                                     />
                                 </Flex>
@@ -244,6 +246,8 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                                     <Checkbox
                                         isChecked={task.completed}
                                         onChange={() => handleToggleTask(task)}
+                                        colorScheme="purple"
+                                        className="[&>span]:!border-purple-600 dark:[&>span]:!border-white/40"
                                         flexShrink={0}
                                     />
                                     <Box flex="1" textAlign="left">
@@ -260,7 +264,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                                             </Text>
                                         )}
                                         {task.scheduledAt && (
-                                            <Text fontSize="sm" opacity={0.7}>
+                                            <Text fontSize="sm" className="text-purple-700/70 dark:text-white/70">
                                                 🕒 {format(normalizeDate(task.scheduledAt)!, "MMM d, hh:mm a")}
                                             </Text>
                                         )}
@@ -310,12 +314,12 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                                 py={1.5}
                                 rounded="lg"
                                 cursor="pointer"
-                                _hover={{ bg: "whiteAlpha.100" }}
+                                className="hover:bg-purple-200/40 dark:hover:bg-white/10"
                                 transition="background 0.15s"
                                 onClick={() => openAddModal(col.id)}
                             >
-                                <Plus size={14} opacity={0.4} />
-                                <Text fontSize="xs" className="!text-white/40">
+                                <Plus size={14} className="text-purple-600 dark:text-white/40" />
+                                <Text fontSize="xs" className="!text-purple-600 dark:!text-white/40">
                                     Add task
                                 </Text>
                             </Flex>
@@ -327,8 +331,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                 {isAddingColumn ? (
                     <Box
                         minW="280px"
-                        bg="rgba(120, 81, 169, 0.15)"
-                        border="1px dashed rgba(255,255,255,0.2)"
+                        className="bg-purple-100/40 dark:bg-[rgba(120,81,169,0.15)] border border-dashed border-purple-300/30 dark:border-white/20"
                         rounded="2xl"
                         p={4}
                         flexShrink={0}
@@ -339,10 +342,8 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                             value={addingColumnName}
                             onChange={(e) => setAddingColumnName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddColumn()}
-                            bg="whiteAlpha.100"
+                            className="!bg-purple-50 dark:!bg-white/10 !text-purple-900 dark:!text-white !border-purple-200 dark:!border-white/20"
                             border="1px solid"
-                            borderColor="whiteAlpha.200"
-                            className="!text-white"
                             rounded="lg"
                             autoFocus
                         />
@@ -350,7 +351,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                             <Button size="sm" colorScheme="purple" onClick={handleAddColumn}>
                                 Add Column
                             </Button>
-                            <Button size="sm" variant="ghost" className="!text-white/60"
+                            <Button size="sm" variant="ghost" className="!text-purple-500 dark:!text-white/60"
                                 onClick={() => { setIsAddingColumn(false); setAddingColumnName(""); }}>
                                 Cancel
                             </Button>
@@ -362,17 +363,17 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                         h="100px"
                         align="center"
                         justify="center"
-                        border="1px dashed rgba(255,255,255,0.15)"
+                        className="border border-dashed border-purple-400/50 dark:border-white/15"
                         rounded="2xl"
                         cursor="pointer"
-                        _hover={{ bg: "whiteAlpha.50", borderColor: "whiteAlpha.300" }}
+                        _hover={{ borderColor: "purple.500" }}
                         transition="all 0.2s"
                         flexShrink={0}
                         onClick={() => setIsAddingColumn(true)}
                     >
                         <Flex align="center" gap={2}>
-                            <Plus size={16} opacity={0.4} />
-                            <Text fontSize="sm" className="!text-white/40">
+                            <Plus size={16} className="text-purple-600 dark:text-white/40" />
+                            <Text fontSize="sm" className="!text-purple-600 dark:!text-white/40">
                                 Add Column
                             </Text>
                         </Flex>

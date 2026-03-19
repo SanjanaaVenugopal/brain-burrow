@@ -225,6 +225,8 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                 <Checkbox
                                     isChecked={todo.completed}
                                     onChange={() => handleToggle(todo)}
+                                    colorScheme="purple"
+                                    className="[&>span]:!border-purple-600 dark:[&>span]:!border-white/40"
                                     flexShrink={0}
                                 />
 
