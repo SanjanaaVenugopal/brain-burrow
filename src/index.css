@@ -15,3 +15,189 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+/* ── Calendar Theme ── */
+.todo-calendar .react-calendar {
+  background: transparent;
+  border: none;
+  width: 100%;
+  color: white;
+  font-family: inherit;
+}
+
+/* ── Animated month transitions ── */
+.todo-calendar .react-calendar__viewContainer {
+  animation: calFadeSlide 0.3s ease-out;
+}
+
+@keyframes calFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Navigation / Gradient header ── */
+.todo-calendar .react-calendar__navigation {
+  display: flex;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.35), rgba(79, 70, 229, 0.25));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.todo-calendar .react-calendar__navigation button {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+}
+
+.todo-calendar .react-calendar__navigation button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.05);
+}
+
+.todo-calendar .react-calendar__navigation button:disabled {
+  opacity: 0.25;
+  transform: none;
+}
+
+/* ── Weekday headers ── */
+.todo-calendar .react-calendar__month-view__weekdays {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(196, 181, 253, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 0.25rem;
+}
+
+.todo-calendar .react-calendar__month-view__weekdays abbr {
+  text-decoration: none;
+}
+
+/* ── Date tiles ── */
+.todo-calendar .react-calendar__tile {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 0.25rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 85px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.todo-calendar .react-calendar__tile:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+/* ── Tiles with tasks get a glow ring on hover ── */
+.todo-calendar .react-calendar__tile.has-tasks:hover {
+  box-shadow: 0 0 12px rgba(147, 51, 234, 0.4), inset 0 0 8px rgba(147, 51, 234, 0.15);
+  background: rgba(147, 51, 234, 0.12);
+}
+
+.todo-calendar .react-calendar__tile.has-tasks {
+  background: rgba(147, 51, 234, 0.06);
+}
+
+/* ── Today: ring/circle instead of fill ── */
+.todo-calendar .react-calendar__tile--now {
+  background: transparent !important;
+  font-weight: 800;
+  color: white !important;
+}
+
+.todo-calendar .react-calendar__tile--now > abbr,
+.todo-calendar .react-calendar__tile--now > .cal-date-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(147, 51, 234, 0.9);
+  box-shadow: 0 0 10px rgba(147, 51, 234, 0.4);
+  background: rgba(147, 51, 234, 0.15);
+}
+
+/* ── Active (clicked) tile ── */
+.todo-calendar .react-calendar__tile--active {
+  background: rgba(147, 51, 234, 0.2) !important;
+  box-shadow: inset 0 0 8px rgba(147, 51, 234, 0.2);
+}
+
+/* ── Neighboring month dates ── */
+.todo-calendar .react-calendar__tile--neighboringMonth {
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Weekend subtle stripe ── */
+.todo-calendar .react-calendar__month-view__days__day--weekend {
+  color: rgba(196, 181, 253, 0.85);
+  background: rgba(147, 51, 234, 0.04);
+}
+
+/* ── Alternating row shading ── */
+.todo-calendar .react-calendar__month-view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+/* Stripe: rows 2, 4, 6 get a subtle band */
+.todo-calendar .react-calendar__tile:nth-child(n+8):nth-child(-n+14),
+.todo-calendar .react-calendar__tile:nth-child(n+22):nth-child(-n+28),
+.todo-calendar .react-calendar__tile:nth-child(n+36):nth-child(-n+42) {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+}
+
+/* ── Task pills: softer with gradients ── */
+.cal-task-pill {
+  font-size: 0.6rem;
+  line-height: 1.3;
+  padding: 2px 6px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  transition: all 0.15s ease;
+}
+
+.cal-task-pill--active {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.7), rgba(124, 58, 237, 0.5));
+  border: 1px solid rgba(196, 181, 253, 0.25);
+  box-shadow: 0 1px 4px rgba(147, 51, 234, 0.2);
+}
+
+.cal-task-pill--done {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.5), rgba(22, 163, 74, 0.3));
+  border: 1px solid rgba(134, 239, 172, 0.2);
+  opacity: 0.6;
+  text-decoration: line-through;
+}

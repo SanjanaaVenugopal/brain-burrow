@@ -63,7 +63,7 @@ export const TodoPage = () => {
             {mode === "dashboard" ? (
                 <TodoDashboard />
             ) : (
-                <TodoCalendar todos={todos} onSelectDate={(d) => console.log(d)} />
+                <TodoCalendar />
             )}
             <AddTodoButton
                 onAdd={(todo) => dispatch(addTodo(todo))}
