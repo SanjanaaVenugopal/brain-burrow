@@ -6,32 +6,37 @@ export type RecurrencePattern =
   | { type: "yearly"; month?: number; day?: number }
   | { type: "custom"; intervalDays: number }; // Every N days
 
+export type CompletionRecord = {
+  completedAt: string; // ISO date string
+};
+
 export type Todo = {
   id: string;
   title: string;
   completed: boolean;
-  dueDate?: Date; // When it's due (used for grouping)
-  scheduledAt?: Date; // Exact time for Today / Tomorrow tasks. For recurring instances, this is the instance date
+  dueDate?: Date;
+  scheduledAt?: Date;
   description?: string;
-  tags?: string[]; // e.g. ["work", "personal", "urgent"]
+  tags?: string[];
 
   // Recurring fields
-  recurring?: RecurrencePattern; // Only present on base todos (when recurringBaseId is undefined)
-  recurringBaseId?: string; // If this is an instance, points to the base todo ID. If undefined + recurring exists = base todo
+  recurring?: RecurrencePattern;
   recurringEndDate?: Date;
+  completions?: Record<string, CompletionRecord>; // keyed by "YYYY-MM-DD"
 
-  // Completion tracking
-  completedAt?: Date; // When this specific todo/instance was completed
+  // Override fields — only present on single-day override docs
+  overrideOf?: string;   // base todo ID this overrides
+  overrideDate?: string; // "YYYY-MM-DD" this override is for
+
+  // Completion tracking (non-recurring)
+  completedAt?: Date;
 };
 
 /**
- * Helper type to count completions for a recurring todo base
- * You can derive this from querying instances with the same recurringBaseId
+ * A todo as displayed in the UI.
+ * For recurring todos, virtual instances are computed on the fly.
  */
-export type RecurringTodoStats = {
-  baseId: string;
-  totalInstances: number; // Total instances created
-  completedInstances: number; // How many have been completed
-  currentStreak: number; // Consecutive completions
-  lastCompletedAt?: Date;
+export type DisplayTodo = Todo & {
+  _virtualDate?: string; // "YYYY-MM-DD" — present if this is a computed recurring instance
+  _baseId?: string;      // base recurring todo ID
 };

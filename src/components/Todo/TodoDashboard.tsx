@@ -1,93 +1,179 @@
-import { Box, Heading, Checkbox, Flex, Text, Tag, TagLabel, IconButton, useToast, useDisclosure } from "@chakra-ui/react";
+import { Box, Heading, Checkbox, Flex, Text, Tag, TagLabel, IconButton, useToast, useDisclosure,
+    AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button } from "@chakra-ui/react";
 import { format } from "date-fns";
 import { normalizeDate } from "./NormalizeDates";
 import { Edit2, Trash2, Repeat } from "lucide-react";
-import { deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store";
-import { deleteTodo, toggleTodo, updateTodo } from "./TodoSlice";
+import { addTodo, deleteTodo, toggleRecurringCompletion, toggleTodo, updateTodo } from "./TodoSlice";
 import { GroupedTodos } from "./GroupedTodos";
 import { useTodoForm } from "./useTodoForm";
-import { Todo } from "./Todo.type";
+import { DisplayTodo, Todo } from "./Todo.type";
 import { TodoModal } from "./TodoModal";
-import React, { useState } from "react";
+import { CloseButtonIcon } from "../HomePage/CommandBar/CloseButtonIcon";
+import { computeDisplayTodos } from "./computeInstances";
+import React, { useRef, useState } from "react";
 
 type TodoDashboardProps = {
 };
 
 export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
+    const cancelRef = useRef<HTMLButtonElement>(null);
     const toast = useToast();
     const dispatch = useDispatch<AppDispatch>();
 
-    // Get todos from Redux instead of local state
     const todos = useSelector((state: RootState) => state.todos.todos);
+    const displayTodos = React.useMemo(() => computeDisplayTodos(todos), [todos]);
 
-    const [editingTodo, setEditingTodo] = useState<Todo | undefined>(undefined);
+    const [editingTodo, setEditingTodo] = useState<DisplayTodo | undefined>(undefined);
+    const [pendingEditTodo, setPendingEditTodo] = useState<Todo | undefined>(undefined);
 
-    const groupedTodos = GroupedTodos(todos);
+    const groupedTodos = GroupedTodos(displayTodos);
 
-    const handleToggle = async (id: string) => {
-        try {
-            const updatedTododocRef = doc(db, "BrainBurrowTodos", id);
-            const document = await getDoc(updatedTododocRef);
-            if (document.exists()) {
-                const newCompleted = !document.data()?.completed;
-                await updateDoc(updatedTododocRef, {
+    const handleToggle = async (todo: DisplayTodo) => {
+        if (todo._virtualDate && todo._baseId) {
+            // Recurring virtual instance — toggle completion in base doc's completions map
+            const baseId = todo._baseId;
+            const dateStr = todo._virtualDate;
+            const baseTodo = todos.find((t) => t.id === baseId);
+            const wasCompleted = !!baseTodo?.completions?.[dateStr];
+
+            dispatch(toggleRecurringCompletion({ baseId, dateStr }));
+
+            try {
+                const baseDocRef = doc(db, "BrainBurrowTodos", baseId);
+                if (wasCompleted) {
+                    await updateDoc(baseDocRef, { [`completions.${dateStr}`]: null });
+                } else {
+                    await updateDoc(baseDocRef, {
+                        [`completions.${dateStr}`]: { completedAt: new Date().toISOString() },
+                    });
+                }
+            } catch (err) {
+                console.error("Error toggling recurring completion:", err);
+            }
+        } else {
+            // Regular todo
+            dispatch(toggleTodo(todo.id));
+            try {
+                const docRef = doc(db, "BrainBurrowTodos", todo.id);
+                const newCompleted = !todo.completed;
+                await updateDoc(docRef, {
                     completed: newCompleted,
                     completedAt: newCompleted ? new Date() : null,
                 });
+            } catch (err) {
+                console.error("Error updating Firestore:", err);
             }
-        } catch (err) {
-            console.error("Error updating Firestore:", err);
         }
-        dispatch(toggleTodo(id));
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (todo: DisplayTodo) => {
+        if (todo._baseId && todo.overrideOf) {
+            // Delete override doc
+            try {
+                await deleteDoc(doc(db, "BrainBurrowTodos", todo.id));
+                dispatch(deleteTodo(todo.id));
+            } catch (error) {
+                toast({ title: "Error deleting", description: (error as Error).message, status: "error", duration: 3000, isClosable: true });
+            }
+        } else if (!todo._virtualDate) {
+            // Regular todo
+            try {
+                await deleteDoc(doc(db, "BrainBurrowTodos", todo.id));
+                dispatch(deleteTodo(todo.id));
+            } catch (error) {
+                toast({ title: "Error deleting", description: (error as Error).message, status: "error", duration: 3000, isClosable: true });
+            }
+        }
+    };
+
+    // Called when "Update all instances" is chosen
+    const handleEditAll = async (todo: Todo) => {
+        if (!editingTodo?._baseId) return;
+        const baseId = editingTodo._baseId;
+        const updatedBase: Todo = {
+            ...todos.find((t) => t.id === baseId)!,
+            title: todo.title,
+            description: todo.description,
+            tags: todo.tags,
+            scheduledAt: todo.scheduledAt,
+            recurring: todo.recurring,
+            recurringEndDate: todo.recurringEndDate,
+        };
         try {
-            await deleteDoc(doc(db, "BrainBurrowTodos", id));
-            dispatch(deleteTodo(id))
-        } catch (error) {
-            toast({
-                title: "Error deleting todo",
-                description: (error as Error).message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
+            const baseDocRef = doc(db, "BrainBurrowTodos", baseId);
+            await updateDoc(baseDocRef, {
+                title: todo.title,
+                description: todo.description || "",
+                tags: todo.tags || [],
+                scheduledAt: todo.scheduledAt || null,
+                recurring: todo.recurring,
+                ...(todo.recurringEndDate ? { recurringEndDate: todo.recurringEndDate } : {}),
             });
+            dispatch(updateTodo(updatedBase));
+        } catch (err) {
+            toast({ title: "Error updating", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
         }
     };
 
-    const handleEdit = (todo: Todo) => {
-        // If editing a recurring instance's recurrence, update the base todo instead
-        if (editingTodo?.recurringBaseId && todo.recurring && todo.recurring.type !== 'none') {
-            const baseTodo = todos.find((t) => t.id === editingTodo.recurringBaseId);
-            if (baseTodo) {
-                const updatedBase: Todo = {
-                    ...baseTodo,
-                    recurring: todo.recurring,
-                    recurringEndDate: todo.recurringEndDate,
-                };
-                // Update base in Firestore
-                const baseDocRef = doc(db, 'BrainBurrowTodos', baseTodo.id);
-                updateDoc(baseDocRef, {
+    // Called when "Just today" is chosen — create an override doc
+    const handleEditJustToday = async (todo: Todo) => {
+        if (!editingTodo?._virtualDate || !editingTodo?._baseId) return;
+        const overrideDoc: Todo = {
+            ...todo,
+            id: "",
+            overrideOf: editingTodo._baseId,
+            overrideDate: editingTodo._virtualDate,
+            completed: editingTodo.completed,
+        };
+        try {
+            const docRef = await addDoc(collection(db, "BrainBurrowTodos"), overrideDoc);
+            await updateDoc(docRef, { id: docRef.id });
+            overrideDoc.id = docRef.id;
+            dispatch(addTodo(overrideDoc));
+        } catch (err) {
+            toast({ title: "Error creating override", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
+        }
+    };
+
+    // Called from form submit
+    const handleEditSubmit = async (todo: Todo) => {
+        if (editingTodo?._virtualDate) {
+            // Recurring instance — show "all or just today" dialog
+            setPendingEditTodo(todo);
+            onClose(); // close edit modal
+            onAlertOpen(); // open choice dialog
+        } else {
+            // Regular todo — update directly in Firestore + Redux
+            try {
+                const docRef = doc(db, "BrainBurrowTodos", todo.id);
+                await updateDoc(docRef, {
+                    title: todo.title,
+                    description: todo.description || "",
+                    tags: todo.tags || [],
+                    scheduledAt: todo.scheduledAt || null,
                     recurring: todo.recurring,
                     ...(todo.recurringEndDate ? { recurringEndDate: todo.recurringEndDate } : {}),
                 });
-                dispatch(updateTodo(updatedBase));
-                return;
+            } catch (err) {
+                toast({ title: "Error updating", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
             }
+            dispatch(updateTodo(todo));
+            onClose();
+            setEditingTodo(undefined);
         }
-        dispatch(updateTodo(todo));
-    }
+    };
 
-    // When editing a recurring instance, enrich it with base todo's recurrence info
+    // Build enriched editing todo for the form
     const enrichedEditingTodo = React.useMemo(() => {
         if (!editingTodo) return undefined;
-        if (editingTodo.recurringBaseId) {
-            const baseTodo = todos.find((t) => t.id === editingTodo.recurringBaseId);
+        if (editingTodo._baseId) {
+            const baseTodo = todos.find((t) => t.id === editingTodo._baseId);
             if (baseTodo) {
                 return {
                     ...editingTodo,
@@ -96,10 +182,13 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                 };
             }
         }
-        return editingTodo;
+        return editingTodo as Todo;
     }, [editingTodo, todos]);
 
-    const form = useTodoForm({ onSuccess: (todo) => { handleEdit(todo); onClose(); setEditingTodo(undefined); }, existingTodo: enrichedEditingTodo });
+    const form = useTodoForm({
+        onSuccess: handleEditSubmit,
+        existingTodo: enrichedEditingTodo,
+    });
 
     return (
         <>
@@ -115,11 +204,11 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                         w="380px"
                         shadow="md"
                     >
-                        <Heading fontSize="lg" mb={3} key={idx}>
+                        <Heading fontSize="lg" mb={3}>
                             {group}
                         </Heading>
 
-                        {todos.map((todo, id) => (
+                        {todos.map((todo) => (
                             <Flex
                                 align="center"
                                 p={2}
@@ -129,16 +218,14 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                 transition="background 0.2s ease"
                                 justify="flex-start"
                                 gap={3}
-                                key={id}
+                                key={todo._virtualDate ? `${todo._baseId}::${todo._virtualDate}` : todo.id}
                             >
-                                {/* Checkbox */}
                                 <Checkbox
                                     isChecked={todo.completed}
-                                    onChange={() => handleToggle(todo.id)}
+                                    onChange={() => handleToggle(todo)}
                                     flexShrink={0}
                                 />
 
-                                {/* Left content */}
                                 <Box flex="1" textAlign="left">
                                     <Text
                                         fontWeight="medium"
@@ -146,7 +233,7 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                         noOfLines={1}
                                     >
                                         {todo.title}
-                                        {((todo.recurring && todo.recurring.type !== "none") || todo.recurringBaseId) && (
+                                        {todo._virtualDate && (
                                             <Repeat size={12} style={{ display: "inline-block", marginLeft: "6px", verticalAlign: "middle", opacity: 0.7 }} />
                                         )}
                                     </Text>
@@ -157,7 +244,6 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                         </Text>
                                     )}
 
-                                    {/* Tags */}
                                     {todo.tags && todo.tags.length > 0 && (
                                         <Flex wrap="wrap" gap={1} mt={1}>
                                             {todo.tags.map((tag, i) => (
@@ -169,7 +255,6 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                     )}
                                 </Box>
 
-                                {/* Hover icons */}
                                 <Flex
                                     opacity={0}
                                     _groupHover={{ opacity: 1 }}
@@ -188,21 +273,79 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                         }}
                                         className="!bg-transparent !border-none hover:opacity-80 transition"
                                     />
-                                    <IconButton
-                                        size="xs"
-                                        variant="ghost"
-                                        aria-label="Delete"
-                                        icon={<Trash2 size={14} className="text-purple-950 dark:text-white" />}
-                                        onClick={() => handleDelete(todo.id)}
-                                        className="!bg-transparent !border-none hover:opacity-80 transition"
-                                    />
+                                    {!todo._virtualDate && (
+                                        <IconButton
+                                            size="xs"
+                                            variant="ghost"
+                                            aria-label="Delete"
+                                            icon={<Trash2 size={14} className="text-purple-950 dark:text-white" />}
+                                            onClick={() => handleDelete(todo)}
+                                            className="!bg-transparent !border-none hover:opacity-80 transition"
+                                        />
+                                    )}
                                 </Flex>
                             </Flex>
                         ))}
-                    </Box >
+                    </Box>
                 ))}
             </Flex>
+
             <TodoModal isOpen={isOpen} onClose={onClose} form={form} title="Edit Todo" submitLabel="Update" />
+
+            {/* "Update all or just today" dialog */}
+            <AlertDialog isOpen={isAlertOpen} leastDestructiveRef={cancelRef} onClose={onAlertClose} isCentered>
+                <AlertDialogOverlay bg="blackAlpha.600" backdropFilter="blur(4px)">
+                    <AlertDialogContent
+                        className="!bg-zinc-600/30 !backdrop-blur-md !border !border-white/15"
+                        rounded="2xl"
+                        shadow="xl"
+                        position="relative"
+                    >
+                        <CloseButtonIcon
+                            onClick={() => {
+                                onAlertClose();
+                                setEditingTodo(undefined);
+                                setPendingEditTodo(undefined);
+                            }}
+                            wantDark={false}
+                        />
+                        <AlertDialogHeader className="!text-white/80" fontSize="lg" fontWeight="bold" pt={6}>
+                            Update Recurring Todo
+                        </AlertDialogHeader>
+                        <AlertDialogBody className="!text-white/60">
+                            Do you want to update all instances or just this one?
+                        </AlertDialogBody>
+                        <AlertDialogFooter gap={3} pb={6}>
+                            <Button
+                                onClick={async () => {
+                                    if (pendingEditTodo) await handleEditJustToday(pendingEditTodo);
+                                    onAlertClose();
+                                    setEditingTodo(undefined);
+                                    setPendingEditTodo(undefined);
+                                }}
+                                variant="outline"
+                                className="!text-white/80 !border-white/20 hover:!bg-white/10"
+                            >
+                                Just Today
+                            </Button>
+                            <Button
+                                onClick={async () => {
+                                    if (pendingEditTodo) await handleEditAll(pendingEditTodo);
+                                    onAlertClose();
+                                    setEditingTodo(undefined);
+                                    setPendingEditTodo(undefined);
+                                }}
+                                bg="purple.600"
+                                color="white"
+                                _hover={{ bg: "purple.700" }}
+                                className="!shadow-md"
+                            >
+                                All Instances
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
         </>
     );
 }

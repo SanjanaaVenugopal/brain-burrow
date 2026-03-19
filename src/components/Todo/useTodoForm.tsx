@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { RecurrencePattern, Todo } from "./Todo.type";
 import { isToday, isSameDay, addDays } from "date-fns";
 import { useToast } from "@chakra-ui/react";
-import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { normalizeDate } from "./NormalizeDates";
 
@@ -49,18 +49,19 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
         setSubmitted(true);
         if (!title.trim()) return;
 
-        const isTodayOrTomorrow =
-            scheduledAt && (isToday(scheduledAt) || isSameDay(scheduledAt, addDays(new Date(), 1)));
-
-        if (isTodayOrTomorrow && !scheduledAt) {
-            toast({
-                title: "Time required!",
-                description: "Please set a time for tasks scheduled for today or tomorrow.",
-                status: "warning",
-                duration: 2500,
-                isClosable: true,
-            });
-            return;
+        // Force user to set a time for today/tomorrow tasks
+        if (scheduledAt && (isToday(scheduledAt) || isSameDay(scheduledAt, addDays(new Date(), 1)))) {
+            const hasTime = scheduledAt.getHours() !== 0 || scheduledAt.getMinutes() !== 0;
+            if (!hasTime) {
+                toast({
+                    title: "Time required!",
+                    description: "Please set a time for tasks scheduled for today or tomorrow.",
+                    status: "warning",
+                    duration: 2500,
+                    isClosable: true,
+                });
+                return;
+            }
         }
 
         const todo: Todo = {
@@ -69,21 +70,25 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
             description: description.trim(),
             completed: existingTodo?.completed || false,
             tags: tags ?? [],
-            // Recurrence
             recurring: recurring?.type !== "none" ? recurring : { type: "none" },
             ...(recurring?.type !== "none" && recurringEndDate ? { recurringEndDate } : {}),
             ...(scheduledAt ? { scheduledAt } : {}),
+            // Preserve completions map if editing
+            ...(existingTodo?.completions ? { completions: existingTodo.completions } : {}),
         };
 
+        if (existingTodo) {
+            // For edits, let the parent handle Firestore writes
+            // (supports "All instances" vs "Just today" for recurring)
+            onSuccess(todo);
+            resetForm();
+            return;
+        }
+
         try {
-            if (existingTodo) {
-                const docRef = doc(db, "BrainBurrowTodos", existingTodo.id);
-                await updateDoc(docRef, todo);
-            } else {
-                const docRef = await addDoc(collection(db, "BrainBurrowTodos"), todo);
-                await updateDoc(docRef, { id: docRef.id });
-                todo.id = docRef.id;
-            }
+            const docRef = await addDoc(collection(db, "BrainBurrowTodos"), todo);
+            await updateDoc(docRef, { id: docRef.id });
+            todo.id = docRef.id;
 
             onSuccess(todo);
             resetForm();

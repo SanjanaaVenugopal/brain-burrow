@@ -9,7 +9,7 @@ import { TodoHeader } from "../components/Todo/TodoHeader";
 import { Box, useToast } from "@chakra-ui/react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { addTodo, setTodos, checkAndCreateMissingInstances } from "../components/Todo/TodoSlice";
+import { addTodo, setTodos } from "../components/Todo/TodoSlice";
 import type { RootState, AppDispatch } from "../store";
 import { normalizeDate } from "../components/Todo/NormalizeDates";
 
@@ -19,7 +19,6 @@ export const TodoPage = () => {
     const dispatch = useDispatch<AppDispatch>();
     const toast = useToast();
 
-    // Get todos from Redux instead of local state
     const todos = useSelector((state: RootState) => state.todos.todos);
 
     useEffect(() => {
@@ -35,10 +34,10 @@ export const TodoPage = () => {
                         scheduledAt: normalizeDate(data.scheduledAt),
                         recurringEndDate: normalizeDate(data.recurringEndDate),
                         completedAt: normalizeDate(data.completedAt),
+                        completions: data.completions || {},
                     } as Todo;
                 });
                 dispatch(setTodos(todoList));
-                dispatch(checkAndCreateMissingInstances());
             } catch (err) {
                 console.error("Error fetching todos:", err);
                 toast({
