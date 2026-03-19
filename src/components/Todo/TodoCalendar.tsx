@@ -1,22 +1,39 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import Calendar from "react-calendar";
 import {
-    Box, Text, Flex, Checkbox, Tag, TagLabel, Heading,
+    Box, Text, Flex, Checkbox, Tag, TagLabel, Heading, IconButton, useToast, useDisclosure,
     Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody,
+    AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button,
 } from "@chakra-ui/react";
 import { format, startOfMonth, endOfMonth, addDays } from "date-fns";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
-import { DisplayTodo } from "./Todo.type";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "../../store";
+import { DisplayTodo, Todo } from "./Todo.type";
 import { normalizeDate } from "./NormalizeDates";
 import { computeDisplayTodos } from "./computeInstances";
-import { Repeat } from "lucide-react";
+import { Edit2, Plus, Repeat, Trash2 } from "lucide-react";
 import { CloseButtonIcon } from "../HomePage/CommandBar/CloseButtonIcon";
+import { addTodo, deleteTodo, toggleRecurringCompletion, toggleTodo, updateTodo } from "./TodoSlice";
+import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase";
+import { useTodoForm } from "./useTodoForm";
+import { TodoModal } from "./TodoModal";
 
 export const TodoCalendar: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [activeMonth, setActiveMonth] = useState(new Date());
     const todos = useSelector((state: RootState) => state.todos.todos);
+    const dispatch = useDispatch<AppDispatch>();
+    const toast = useToast();
+
+    // Modal / dialog state
+    const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
+    const { isOpen: isAddOpen, onOpen: onAddOpen, onClose: onAddClose } = useDisclosure();
+    const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
+    const cancelRef = useRef<HTMLButtonElement>(null);
+
+    const [editingTodo, setEditingTodo] = useState<DisplayTodo | undefined>(undefined);
+    const [pendingEditTodo, setPendingEditTodo] = useState<Todo | undefined>(undefined);
 
     // Compute display todos for the visible calendar month (with padding)
     const displayTodos = useMemo(() => {
@@ -47,6 +64,119 @@ export const TodoCalendar: React.FC = () => {
             return aDate && bDate ? aDate.getTime() - bDate.getTime() : 0;
         });
     }, [selectedDate, todosByDate]);
+
+    // ── Toggle ──
+    const handleToggle = async (todo: DisplayTodo) => {
+        if (todo._virtualDate && todo._baseId) {
+            const baseId = todo._baseId;
+            const dateStr = todo._virtualDate;
+            const baseTodo = todos.find((t) => t.id === baseId);
+            const wasCompleted = !!baseTodo?.completions?.[dateStr];
+            dispatch(toggleRecurringCompletion({ baseId, dateStr }));
+            try {
+                const baseDocRef = doc(db, "BrainBurrowTodos", baseId);
+                if (wasCompleted) {
+                    await updateDoc(baseDocRef, { [`completions.${dateStr}`]: null });
+                } else {
+                    await updateDoc(baseDocRef, { [`completions.${dateStr}`]: { completedAt: new Date().toISOString() } });
+                }
+            } catch (err) { console.error("Error toggling recurring completion:", err); }
+        } else {
+            dispatch(toggleTodo(todo.id));
+            try {
+                const docRef = doc(db, "BrainBurrowTodos", todo.id);
+                const newCompleted = !todo.completed;
+                await updateDoc(docRef, { completed: newCompleted, completedAt: newCompleted ? new Date() : null });
+            } catch (err) { console.error("Error updating Firestore:", err); }
+        }
+    };
+
+    // ── Delete ──
+    const handleDelete = async (todo: DisplayTodo) => {
+        if (todo._baseId && todo.overrideOf) {
+            try { await deleteDoc(doc(db, "BrainBurrowTodos", todo.id)); dispatch(deleteTodo(todo.id)); }
+            catch (err) { toast({ title: "Error deleting", description: (err as Error).message, status: "error", duration: 3000, isClosable: true }); }
+        } else if (!todo._virtualDate) {
+            try { await deleteDoc(doc(db, "BrainBurrowTodos", todo.id)); dispatch(deleteTodo(todo.id)); }
+            catch (err) { toast({ title: "Error deleting", description: (err as Error).message, status: "error", duration: 3000, isClosable: true }); }
+        }
+    };
+
+    // ── Edit ──
+    const handleEditAll = async (todo: Todo) => {
+        if (!editingTodo?._baseId) return;
+        const baseId = editingTodo._baseId;
+        const updatedBase: Todo = {
+            ...todos.find((t) => t.id === baseId)!,
+            title: todo.title, description: todo.description, tags: todo.tags,
+            scheduledAt: todo.scheduledAt, recurring: todo.recurring, recurringEndDate: todo.recurringEndDate,
+        };
+        try {
+            await updateDoc(doc(db, "BrainBurrowTodos", baseId), {
+                title: todo.title, description: todo.description || "", tags: todo.tags || [],
+                scheduledAt: todo.scheduledAt || null, recurring: todo.recurring,
+                ...(todo.recurringEndDate ? { recurringEndDate: todo.recurringEndDate } : {}),
+            });
+            dispatch(updateTodo(updatedBase));
+        } catch (err) { toast({ title: "Error updating", description: (err as Error).message, status: "error", duration: 3000, isClosable: true }); }
+    };
+
+    const handleEditJustToday = async (todo: Todo) => {
+        if (!editingTodo?._virtualDate || !editingTodo?._baseId) return;
+        const overrideDoc: Todo = { ...todo, id: "", overrideOf: editingTodo._baseId, overrideDate: editingTodo._virtualDate, completed: editingTodo.completed };
+        try {
+            const docRef = await addDoc(collection(db, "BrainBurrowTodos"), overrideDoc);
+            await updateDoc(docRef, { id: docRef.id });
+            overrideDoc.id = docRef.id;
+            dispatch(addTodo(overrideDoc));
+        } catch (err) { toast({ title: "Error creating override", description: (err as Error).message, status: "error", duration: 3000, isClosable: true }); }
+    };
+
+    const handleEditSubmit = async (todo: Todo) => {
+        if (editingTodo?._virtualDate) {
+            setPendingEditTodo(todo);
+            onEditClose();
+            onAlertOpen();
+        } else {
+            try {
+                await updateDoc(doc(db, "BrainBurrowTodos", todo.id), {
+                    title: todo.title, description: todo.description || "", tags: todo.tags || [],
+                    scheduledAt: todo.scheduledAt || null, recurring: todo.recurring,
+                    ...(todo.recurringEndDate ? { recurringEndDate: todo.recurringEndDate } : {}),
+                });
+            } catch (err) { toast({ title: "Error updating", description: (err as Error).message, status: "error", duration: 3000, isClosable: true }); }
+            dispatch(updateTodo(todo));
+            onEditClose();
+            setEditingTodo(undefined);
+        }
+    };
+
+    const editForm = useTodoForm({ onSuccess: handleEditSubmit });
+
+    const openEditFor = (todo: DisplayTodo) => {
+        setEditingTodo(todo);
+        let enriched: Todo = todo;
+        if (todo._baseId) {
+            const baseTodo = todos.find((t) => t.id === todo._baseId);
+            if (baseTodo) enriched = { ...todo, recurring: baseTodo.recurring, recurringEndDate: baseTodo.recurringEndDate };
+        }
+        editForm.loadTodo(enriched);
+        onEditOpen();
+    };
+
+    // ── Add new task ──
+    const handleAddSubmit = (todo: Todo) => {
+        dispatch(addTodo(todo));
+        onAddClose();
+    };
+
+    const addForm = useTodoForm({ onSuccess: handleAddSubmit });
+
+    const openAddForDate = () => {
+        addForm.resetForm();
+        if (selectedDate) addForm.setScheduledAt(selectedDate);
+        onAddOpen();
+    };
 
     return (
         <Box mx="auto" maxW="900px" px={4}>
@@ -114,17 +244,38 @@ export const TodoCalendar: React.FC = () => {
                         <Heading fontSize="lg">
                             {selectedDate ? format(selectedDate, "EEEE, MMM d, yyyy") : ""}
                         </Heading>
-                        {selectedTodos.length > 0 && (
-                            <Text fontSize="sm" fontWeight="normal" opacity={0.5} mt={1}>
-                                {selectedTodos.filter((t) => t.completed).length}/{selectedTodos.length} completed
-                            </Text>
-                        )}
+                        <Flex align="center" justify="space-between" mt={1}>
+                            {selectedTodos.length > 0 && (
+                                <Text fontSize="sm" fontWeight="normal" opacity={0.5}>
+                                    {selectedTodos.filter((t) => t.completed).length}/{selectedTodos.length} completed
+                                </Text>
+                            )}
+                            <IconButton
+                                aria-label="Add task"
+                                icon={<Plus size={16} />}
+                                size="sm"
+                                variant="ghost"
+                                className="!text-white/60 hover:!text-white hover:!bg-white/10"
+                                onClick={openAddForDate}
+                            />
+                        </Flex>
                     </ModalHeader>
                     <ModalBody pb={6} overflowY="auto">
                         {selectedTodos.length === 0 ? (
-                            <Text className="!text-white/40" textAlign="center" py={8}>
-                                No tasks for this day
-                            </Text>
+                            <Flex direction="column" align="center" py={8} gap={3}>
+                                <Text className="!text-white/40" textAlign="center">
+                                    No tasks for this day
+                                </Text>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    leftIcon={<Plus size={14} />}
+                                    className="!text-white/50 hover:!text-white hover:!bg-white/10"
+                                    onClick={openAddForDate}
+                                >
+                                    Add a task
+                                </Button>
+                            </Flex>
                         ) : (
                             selectedTodos.map((todo, i) => (
                                 <Flex
@@ -137,10 +288,12 @@ export const TodoCalendar: React.FC = () => {
                                     gap={3}
                                     borderBottom={i < selectedTodos.length - 1 ? "1px solid" : "none"}
                                     borderColor="whiteAlpha.100"
+                                    role="group"
+                                    opacity={todo.completed ? 0.45 : 1}
                                 >
                                     <Checkbox
                                         isChecked={todo.completed}
-                                        isReadOnly
+                                        onChange={() => handleToggle(todo)}
                                         flexShrink={0}
                                         colorScheme="purple"
                                     />
@@ -180,12 +333,79 @@ export const TodoCalendar: React.FC = () => {
                                             </Flex>
                                         )}
                                     </Box>
+
+                                    <Flex
+                                        opacity={0}
+                                        _groupHover={{ opacity: 1 }}
+                                        transition="opacity 0.2s ease"
+                                        gap={1}
+                                        flexShrink={0}
+                                    >
+                                        <IconButton
+                                            size="xs"
+                                            variant="ghost"
+                                            aria-label="Edit"
+                                            icon={<Edit2 size={14} />}
+                                            onClick={() => openEditFor(todo)}
+                                            className="!text-white/60 hover:!text-white hover:!bg-white/10 !border-none transition"
+                                        />
+                                        {!todo._virtualDate && (
+                                            <IconButton
+                                                size="xs"
+                                                variant="ghost"
+                                                aria-label="Delete"
+                                                icon={<Trash2 size={14} />}
+                                                onClick={() => handleDelete(todo)}
+                                                className="!text-red-400 hover:!text-red-300 hover:!bg-red-500/20 !border-none transition"
+                                            />
+                                        )}
+                                    </Flex>
                                 </Flex>
                             ))
                         )}
                     </ModalBody>
                 </ModalContent>
             </Modal>
+
+            {/* Edit Todo Modal */}
+            <TodoModal isOpen={isEditOpen} onClose={onEditClose} form={editForm} title="Edit Todo" submitLabel="Update" />
+
+            {/* Add Todo Modal */}
+            <TodoModal isOpen={isAddOpen} onClose={onAddClose} form={addForm} title="Add a new Todo" submitLabel="Add" />
+
+            {/* "Update all or just today" recurring dialog */}
+            <AlertDialog isOpen={isAlertOpen} leastDestructiveRef={cancelRef} onClose={onAlertClose} isCentered>
+                <AlertDialogOverlay bg="blackAlpha.600" backdropFilter="blur(4px)">
+                    <AlertDialogContent
+                        className="!bg-zinc-600/30 !backdrop-blur-md !border !border-white/15"
+                        rounded="2xl" shadow="xl" position="relative"
+                    >
+                        <CloseButtonIcon onClick={() => { onAlertClose(); setEditingTodo(undefined); setPendingEditTodo(undefined); }} wantDark={false} />
+                        <AlertDialogHeader className="!text-white/80" fontSize="lg" fontWeight="bold" pt={6}>
+                            Update Recurring Todo
+                        </AlertDialogHeader>
+                        <AlertDialogBody className="!text-white/60">
+                            Do you want to update all instances or just this one?
+                        </AlertDialogBody>
+                        <AlertDialogFooter gap={3} pb={6}>
+                            <Button
+                                ref={cancelRef}
+                                onClick={async () => { if (pendingEditTodo) await handleEditJustToday(pendingEditTodo); onAlertClose(); setEditingTodo(undefined); setPendingEditTodo(undefined); }}
+                                variant="outline"
+                                className="!text-white/80 !border-white/20 hover:!bg-white/10"
+                            >
+                                Just Today
+                            </Button>
+                            <Button
+                                onClick={async () => { if (pendingEditTodo) await handleEditAll(pendingEditTodo); onAlertClose(); setEditingTodo(undefined); setPendingEditTodo(undefined); }}
+                                bg="purple.600" color="white" _hover={{ bg: "purple.700" }} className="!shadow-md"
+                            >
+                                All Instances
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
         </Box>
     );
 };
