@@ -23,8 +23,8 @@ export const JournalPage = () => {
                         minH="70vh"
                         gap={4}
                     >
-                        <NotebookPen size={48} opacity={0.2} />
-                        <Text fontSize="lg" className="!text-white/30">
+                        <NotebookPen size={48} className="text-purple-300 dark:text-white/20" />
+                        <Text fontSize="lg" className="!text-purple-400 dark:!text-white/30">
                             Select an entry or create a new one
                         </Text>
                     </Flex>

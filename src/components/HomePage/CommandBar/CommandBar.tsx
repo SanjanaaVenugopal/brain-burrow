@@ -19,14 +19,14 @@ export const CommandBar: React.FC<CommandBarProps> = () => {
     }, []);
     return (
         <>
-            <div className={`sticky top-0 z-50 w-full flex justify-between items-center p-4 transition-all duration-500 ${scrolled ? "bg-white/30 dark:bg-black/30 backdrop-blur-md opacity-100" : "bg-transparent"}`} >
+            <div className={`sticky top-0 z-[52] w-full flex justify-between items-center p-4 pointer-events-none transition-all duration-500 ${scrolled ? "bg-white/30 dark:bg-black/30 backdrop-blur-md opacity-100" : "bg-transparent"}`} >
                 <Home
                     size={20}
-                    className="text-purple-950 dark:text-white"
+                    className="text-purple-950 dark:text-white pointer-events-auto cursor-pointer"
                     onClick={() => navigate("/")}
                     aria-label="Home"
                 />
-                <div className="flex items-center p-4 bg-transparent">
+                <div className="flex items-center p-4 bg-transparent pointer-events-auto">
                     <MenuComponent />
                 </div>
             </div >

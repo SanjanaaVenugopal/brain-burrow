@@ -63,17 +63,17 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
             <Box
                 position="fixed"
                 left="0"
-                top="60px"
+                top="0"
                 bottom="0"
                 w="48px"
-                bg="rgba(30, 20, 50, 0.6)"
-                backdropFilter="blur(12px)"
-                borderRight="1px solid rgba(255,255,255,0.1)"
-                zIndex={20}
+                className="bg-white/30 dark:bg-[rgba(30,20,50,0.45)] border-r border-white/30 dark:border-white/10 shadow-[inset_0_0_30px_rgba(255,255,255,0.08)]"
+                backdropFilter="blur(20px)"
+                style={{ WebkitBackdropFilter: "blur(20px)" }}
+                zIndex={51}
                 display="flex"
                 flexDir="column"
                 alignItems="center"
-                pt={3}
+                pt="72px"
                 gap={2}
             >
                 <IconButton
@@ -81,8 +81,8 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                     icon={<ChevronRight size={16} />}
                     size="xs"
                     variant="ghost"
-                    color="white"
-                    _hover={{ bg: "whiteAlpha.200" }}
+                    className="!text-purple-700 dark:!text-white"
+                    _hover={{ bg: "transparent" }}
                     onClick={() => setCollapsed(false)}
                 />
                 <Tooltip label="Main Dashboard" placement="right">
@@ -91,8 +91,8 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                         icon={<LayoutDashboard size={18} />}
                         size="sm"
                         variant="ghost"
-                        color={activeBoardId === null ? "purple.300" : "whiteAlpha.600"}
-                        _hover={{ bg: "whiteAlpha.200" }}
+                        className={activeBoardId === null ? "!text-purple-600 dark:!text-purple-300" : "!text-purple-700 dark:!text-white/60"}
+                        _hover={{ bg: "transparent" }}
                         onClick={() => onSelect(null)}
                     />
                 </Tooltip>
@@ -105,11 +105,12 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                             alignItems="center"
                             justifyContent="center"
                             cursor="pointer"
-                            bg={activeBoardId === b.id ? "purple.600" : "whiteAlpha.100"}
-                            color="white"
+                            className={activeBoardId === b.id
+                                ? "bg-purple-600 text-white"
+                                : "bg-purple-100 dark:bg-white/10 text-purple-700 dark:text-white"}
                             fontSize="xs"
                             fontWeight="bold"
-                            _hover={{ bg: "purple.500" }}
+                            _hover={{ bg: "purple.500", color: "white" }}
                             onClick={() => onSelect(b.id)}
                         >
                             {b.name.charAt(0).toUpperCase()}
@@ -122,8 +123,8 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                         icon={<Plus size={16} />}
                         size="sm"
                         variant="ghost"
-                        color="whiteAlpha.500"
-                        _hover={{ bg: "whiteAlpha.200", color: "white" }}
+                        className="!text-purple-700 dark:!text-white/50"
+                        _hover={{ bg: "transparent" }}
                         onClick={() => { setCollapsed(false); setIsAdding(true); }}
                     />
                 </Tooltip>
@@ -135,20 +136,21 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
         <Box
             position="fixed"
             left="0"
-            top="60px"
+            top="0"
             bottom="0"
             w="220px"
-            bg="rgba(30, 20, 50, 0.6)"
-            backdropFilter="blur(12px)"
-            borderRight="1px solid rgba(255,255,255,0.1)"
-            zIndex={20}
+            className="bg-white/30 dark:bg-[rgba(30,20,50,0.45)] border-r border-white/30 dark:border-white/10 shadow-[inset_0_0_30px_rgba(255,255,255,0.08)]"
+            backdropFilter="blur(20px)"
+            style={{ WebkitBackdropFilter: "blur(20px)" }}
+            zIndex={51}
             display="flex"
             flexDir="column"
             overflowY="auto"
+            pt="60px"
         >
             {/* Header */}
             <Flex align="center" justify="space-between" px={3} pt={3} pb={2}>
-                <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider" className="!text-white/40">
+                <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider" className="!text-purple-700 dark:!text-white/70">
                     Boards
                 </Text>
                 <IconButton
@@ -156,8 +158,8 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                     icon={<ChevronLeft size={16} />}
                     size="xs"
                     variant="ghost"
-                    color="white"
-                    _hover={{ bg: "whiteAlpha.200" }}
+                    className="!text-purple-900 dark:!text-white"
+                    _hover={{ bg: "purple.100" }}
                     onClick={() => setCollapsed(true)}
                 />
             </Flex>
@@ -172,12 +174,14 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                     rounded="lg"
                     cursor="pointer"
                     bg={activeBoardId === null ? "purple.600" : "transparent"}
-                    _hover={{ bg: activeBoardId === null ? "purple.600" : "whiteAlpha.100" }}
+                    className={activeBoardId === null ? "" : "hover:bg-purple-100/60 dark:hover:bg-white/10"}
                     transition="background 0.15s"
                     onClick={() => onSelect(null)}
                 >
-                    <LayoutDashboard size={16} />
-                    <Text fontSize="sm" className="!text-white/80" fontWeight={activeBoardId === null ? "semibold" : "normal"}>
+                    <LayoutDashboard size={16} className={activeBoardId === null ? "text-white" : ""} />
+                    <Text fontSize="sm"
+                        className={activeBoardId === null ? "!text-white !font-semibold" : "!text-purple-900 dark:!text-white/80"}
+                    >
                         Main Dashboard
                     </Text>
                 </Flex>
@@ -193,7 +197,7 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                         rounded="lg"
                         cursor="pointer"
                         bg={activeBoardId === board.id ? "purple.600" : "transparent"}
-                        _hover={{ bg: activeBoardId === board.id ? "purple.600" : "whiteAlpha.100" }}
+                        className={activeBoardId === board.id ? "" : "hover:bg-purple-100/60 dark:hover:bg-white/10"}
                         transition="background 0.15s"
                         onClick={() => onSelect(board.id)}
                         role="group"
@@ -201,18 +205,20 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                         <Box
                             w="24px" h="24px" minW="24px"
                             rounded="md"
-                            bg="whiteAlpha.200"
+                            className={activeBoardId === board.id
+                                ? "bg-white/20"
+                                : "bg-purple-100 dark:bg-white/20"}
                             display="flex"
                             alignItems="center"
                             justifyContent="center"
-                            fontSize="xs"
-                            fontWeight="bold"
-                            color="white"
                         >
-                            {board.name.charAt(0).toUpperCase()}
+                            <Text className={activeBoardId === board.id ? "!text-white" : "!text-purple-700 dark:!text-white"} fontSize="xs" fontWeight="bold">
+                                {board.name.charAt(0).toUpperCase()}
+                            </Text>
                         </Box>
-                        <Text fontSize="sm" className="!text-white/80" noOfLines={1} flex={1}
-                            fontWeight={activeBoardId === board.id ? "semibold" : "normal"}>
+                        <Text fontSize="sm" noOfLines={1} flex={1}
+                            className={activeBoardId === board.id ? "!text-white !font-semibold" : "!text-purple-900 dark:!text-white/80"}
+                        >
                             {board.name}
                         </Text>
                         <IconButton
@@ -220,8 +226,8 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                             icon={<Trash2 size={12} />}
                             size="xs"
                             variant="ghost"
-                            color="whiteAlpha.400"
-                            _hover={{ color: "red.300", bg: "whiteAlpha.200" }}
+                            className="!text-purple-300 dark:!text-white/40"
+                            _hover={{ color: "red.300" }}
                             opacity={0}
                             _groupHover={{ opacity: 1 }}
                             onClick={(e) => { e.stopPropagation(); handleDelete(board.id); }}
@@ -238,10 +244,8 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                            bg="whiteAlpha.100"
+                            className="!bg-purple-50 dark:!bg-white/10 !text-purple-900 dark:!text-white !border-purple-200 dark:!border-white/20 !placeholder-purple-400 dark:!placeholder-white/40"
                             border="1px solid"
-                            borderColor="whiteAlpha.200"
-                            className="!text-white"
                             rounded="lg"
                             autoFocus
                         />
@@ -249,7 +253,7 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                             <Button size="xs" colorScheme="purple" onClick={handleAdd} flex={1}>
                                 Create
                             </Button>
-                            <Button size="xs" variant="ghost" className="!text-white/60"
+                            <Button size="xs" variant="ghost" className="!text-purple-500 dark:!text-white/60"
                                 onClick={() => { setIsAdding(false); setNewName(""); }}>
                                 Cancel
                             </Button>
@@ -263,12 +267,12 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                         py={2}
                         rounded="lg"
                         cursor="pointer"
-                        _hover={{ bg: "whiteAlpha.100" }}
+                        className="hover:bg-purple-100/60 dark:hover:bg-white/10"
                         transition="background 0.15s"
                         onClick={() => setIsAdding(true)}
                     >
-                        <Plus size={16} opacity={0.5} />
-                        <Text fontSize="sm" className="!text-white/40">
+                        <Plus size={16} className="text-purple-600 dark:text-white/70" />
+                        <Text fontSize="sm" className="!text-purple-600 dark:!text-white/70">
                             New Board
                         </Text>
                     </Flex>
