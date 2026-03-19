@@ -49,18 +49,19 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
         setSubmitted(true);
         if (!title.trim()) return;
 
-        const isTodayOrTomorrow =
-            scheduledAt && (isToday(scheduledAt) || isSameDay(scheduledAt, addDays(new Date(), 1)));
-
-        if (isTodayOrTomorrow && !scheduledAt) {
-            toast({
-                title: "Time required!",
-                description: "Please set a time for tasks scheduled for today or tomorrow.",
-                status: "warning",
-                duration: 2500,
-                isClosable: true,
-            });
-            return;
+        // Force user to set a time for today/tomorrow tasks
+        if (scheduledAt && (isToday(scheduledAt) || isSameDay(scheduledAt, addDays(new Date(), 1)))) {
+            const hasTime = scheduledAt.getHours() !== 0 || scheduledAt.getMinutes() !== 0;
+            if (!hasTime) {
+                toast({
+                    title: "Time required!",
+                    description: "Please set a time for tasks scheduled for today or tomorrow.",
+                    status: "warning",
+                    duration: 2500,
+                    isClosable: true,
+                });
+                return;
+            }
         }
 
         const todo: Todo = {
