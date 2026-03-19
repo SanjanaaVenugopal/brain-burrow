@@ -98,7 +98,31 @@ const todoSlice = createSlice({
     },
     updateTodo: (state, action: PayloadAction<Todo>) => {
       const index = state.todos.findIndex((t) => t.id === action.payload.id);
-      if (index !== -1) state.todos[index] = action.payload;
+      if (index !== -1) {
+        const oldTodo = state.todos[index];
+        const wasRecurring = oldTodo.recurring && oldTodo.recurring.type !== 'none';
+        const isNowRecurring = action.payload.recurring && action.payload.recurring.type !== 'none';
+
+        state.todos[index] = action.payload;
+
+        // Only generate instances if a non-recurring BASE todo just became recurring
+        // (not for instances, and not if it was already recurring)
+        if (!wasRecurring && isNowRecurring && !action.payload.recurringBaseId) {
+          let currentBase = action.payload;
+          const instancesToSave: Todo[] = [];
+          for (let i = 0; i < 7; i++) {
+            const nextInstance = createNextRecurringInstance(action.payload, currentBase);
+            if (nextInstance) {
+              state.todos.push(nextInstance);
+              instancesToSave.push(nextInstance);
+              currentBase = nextInstance;
+            }
+          }
+          if (instancesToSave.length > 0) {
+            persistInstancesToFirestore(JSON.parse(JSON.stringify(instancesToSave)));
+          }
+        }
+      }
     },
     toggleTodo: (state, action: PayloadAction<string>) => {
       const todo = state.todos.find((t) => t.id === action.payload);

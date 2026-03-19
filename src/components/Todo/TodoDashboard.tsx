@@ -11,7 +11,7 @@ import { GroupedTodos } from "./GroupedTodos";
 import { useTodoForm } from "./useTodoForm";
 import { Todo } from "./Todo.type";
 import { TodoModal } from "./TodoModal";
-import { useState } from "react";
+import React, { useState } from "react";
 
 type TodoDashboardProps = {
 };
@@ -60,9 +60,46 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
         }
     };
 
-    const handleEdit = (todo: Todo) => { dispatch(updateTodo(todo)) }
+    const handleEdit = (todo: Todo) => {
+        // If editing a recurring instance's recurrence, update the base todo instead
+        if (editingTodo?.recurringBaseId && todo.recurring && todo.recurring.type !== 'none') {
+            const baseTodo = todos.find((t) => t.id === editingTodo.recurringBaseId);
+            if (baseTodo) {
+                const updatedBase: Todo = {
+                    ...baseTodo,
+                    recurring: todo.recurring,
+                    recurringEndDate: todo.recurringEndDate,
+                };
+                // Update base in Firestore
+                const baseDocRef = doc(db, 'BrainBurrowTodos', baseTodo.id);
+                updateDoc(baseDocRef, {
+                    recurring: todo.recurring,
+                    ...(todo.recurringEndDate ? { recurringEndDate: todo.recurringEndDate } : {}),
+                });
+                dispatch(updateTodo(updatedBase));
+                return;
+            }
+        }
+        dispatch(updateTodo(todo));
+    }
 
-    const form = useTodoForm({ onSuccess: (todo) => { handleEdit(todo); onClose(); setEditingTodo(undefined); }, existingTodo: editingTodo });
+    // When editing a recurring instance, enrich it with base todo's recurrence info
+    const enrichedEditingTodo = React.useMemo(() => {
+        if (!editingTodo) return undefined;
+        if (editingTodo.recurringBaseId) {
+            const baseTodo = todos.find((t) => t.id === editingTodo.recurringBaseId);
+            if (baseTodo) {
+                return {
+                    ...editingTodo,
+                    recurring: baseTodo.recurring,
+                    recurringEndDate: baseTodo.recurringEndDate,
+                };
+            }
+        }
+        return editingTodo;
+    }, [editingTodo, todos]);
+
+    const form = useTodoForm({ onSuccess: (todo) => { handleEdit(todo); onClose(); setEditingTodo(undefined); }, existingTodo: enrichedEditingTodo });
 
     return (
         <>
