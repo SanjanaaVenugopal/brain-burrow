@@ -8,7 +8,10 @@ import { normalizeDate } from "./NormalizeDates";
  * - Recurring base todos generate virtual instances for the visible date range
  * - Override docs replace the virtual instance for their specific date
  */
-export function computeDisplayTodos(allTodos: Todo[]): DisplayTodo[] {
+export function computeDisplayTodos(
+  allTodos: Todo[],
+  options?: { rangeStart?: Date; rangeEnd?: Date }
+): DisplayTodo[] {
   const result: DisplayTodo[] = [];
 
   // Separate overrides from regular todos
@@ -37,10 +40,9 @@ export function computeDisplayTodos(allTodos: Todo[]): DisplayTodo[] {
     if (!startDate) continue;
 
     const endDate = normalizeDate(todo.recurringEndDate);
-    // Only generate instances for yesterday through tomorrow
-    // This keeps recurring todos in Overdue/Today/Tomorrow only
-    const rangeStart = addDays(startOfDay(new Date()), -1);
-    const rangeEnd = addDays(startOfDay(new Date()), 2); // end of tomorrow
+    // Use custom range or default to yesterday through tomorrow (dashboard view)
+    const rangeStart = options?.rangeStart ?? addDays(startOfDay(new Date()), -1);
+    const rangeEnd = options?.rangeEnd ?? addDays(startOfDay(new Date()), 2);
 
     const dates = generateRecurringDates(todo, startDate, rangeStart, rangeEnd, endDate);
     const baseOverrides = overrideMap.get(todo.id);

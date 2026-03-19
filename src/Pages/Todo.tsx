@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { TodoViewToggle } from "../components/Todo/TodoViewToggle";
 import { TodoDashboard } from "../components/Todo/TodoDashboard";
 import { TodoCalendar } from "../components/Todo/TodoCalendar";
@@ -10,7 +10,7 @@ import { Box, useToast } from "@chakra-ui/react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { addTodo, setTodos } from "../components/Todo/TodoSlice";
-import type { RootState, AppDispatch } from "../store";
+import type { AppDispatch } from "../store";
 import { normalizeDate } from "../components/Todo/NormalizeDates";
 
 export const TodoPage = () => {
@@ -18,8 +18,6 @@ export const TodoPage = () => {
 
     const dispatch = useDispatch<AppDispatch>();
     const toast = useToast();
-
-    const todos = useSelector((state: RootState) => state.todos.todos);
 
     useEffect(() => {
         const fetchTodos = async () => {
@@ -63,7 +61,7 @@ export const TodoPage = () => {
             {mode === "dashboard" ? (
                 <TodoDashboard />
             ) : (
-                <TodoCalendar todos={todos} onSelectDate={(d) => console.log(d)} />
+                <TodoCalendar />
             )}
             <AddTodoButton
                 onAdd={(todo) => dispatch(addTodo(todo))}
