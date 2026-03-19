@@ -216,9 +216,10 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                 borderRadius="md"
                                 _hover={{ bg: "whiteAlpha.200" }}
                                 role="group"
-                                transition="background 0.2s ease"
+                                transition="all 0.2s ease"
                                 justify="flex-start"
                                 gap={3}
+                                opacity={todo.completed ? 0.45 : 1}
                                 key={todo._virtualDate ? `${todo._baseId}::${todo._virtualDate}` : todo.id}
                             >
                                 <Checkbox

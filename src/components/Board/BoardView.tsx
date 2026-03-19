@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import {
-    Box, Flex, Text, Heading, Checkbox, IconButton, Input, Button, useToast,
+    Box, Flex, Text, Heading, Checkbox, IconButton, Input, Button, Tag, TagLabel, useToast,
     useDisclosure,
 } from "@chakra-ui/react";
 import { Plus, Trash2, Edit2 } from "lucide-react";
@@ -208,7 +208,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                         >
                             {/* Column header */}
                             <Flex align="center" justify="space-between" mb={3}>
-                                <Heading fontSize="md" className="!text-white/90">
+                                <Heading fontSize="lg">
                                     {col.name}
                                 </Heading>
                                 <Flex gap={1}>
@@ -233,65 +233,69 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                                     key={task.id}
                                     align="center"
                                     p={2}
-                                    mb={1}
-                                    rounded="lg"
-                                    bg="whiteAlpha.50"
-                                    _hover={{ bg: "whiteAlpha.100" }}
-                                    transition="background 0.15s"
+                                    borderRadius="md"
+                                    _hover={{ bg: "whiteAlpha.200" }}
                                     role="group"
-                                    gap={2}
+                                    transition="all 0.2s ease"
+                                    justify="flex-start"
+                                    gap={3}
+                                    opacity={task.completed ? 0.45 : 1}
                                 >
                                     <Checkbox
                                         isChecked={task.completed}
                                         onChange={() => handleToggleTask(task)}
-                                        colorScheme="purple"
                                         flexShrink={0}
                                     />
-                                    <Box flex={1} minW={0}>
+                                    <Box flex="1" textAlign="left">
                                         <Text
-                                            fontSize="sm"
-                                            className="!text-white/80"
+                                            fontWeight="medium"
                                             as={task.completed ? "del" : undefined}
                                             noOfLines={1}
-                                            opacity={task.completed ? 0.5 : 1}
                                         >
                                             {task.title}
                                         </Text>
                                         {task.description && (
-                                            <Text fontSize="xs" className="!text-white/30" noOfLines={1}>
+                                            <Text fontSize="sm" opacity={0.5} noOfLines={1}>
                                                 {task.description}
                                             </Text>
                                         )}
                                         {task.scheduledAt && (
-                                            <Text fontSize="xs" className="!text-white/40">
+                                            <Text fontSize="sm" opacity={0.7}>
                                                 🕒 {format(normalizeDate(task.scheduledAt)!, "MMM d, hh:mm a")}
                                             </Text>
+                                        )}
+                                        {task.tags && task.tags.length > 0 && (
+                                            <Flex wrap="wrap" gap={1} mt={1}>
+                                                {task.tags.map((tag, i) => (
+                                                    <Tag key={i} size="sm" colorScheme="purple" borderRadius="full">
+                                                        <TagLabel>{tag}</TagLabel>
+                                                    </Tag>
+                                                ))}
+                                            </Flex>
                                         )}
                                     </Box>
                                     <Flex
                                         opacity={0}
                                         _groupHover={{ opacity: 1 }}
-                                        transition="opacity 0.15s"
-                                        gap={0.5}
+                                        transition="opacity 0.2s ease"
+                                        gap={1}
                                         flexShrink={0}
                                     >
                                         <IconButton
-                                            aria-label="Edit"
-                                            icon={<Edit2 size={12} />}
                                             size="xs"
                                             variant="ghost"
-                                            color="whiteAlpha.500"
-                                            _hover={{ color: "white" }}
+                                            aria-label="Edit"
+                                            icon={<Edit2 size={14} className="text-purple-950 dark:text-white" />}
                                             onClick={() => openEditModal(task)}
+                                            className="!bg-transparent !border-none hover:opacity-80 transition"
                                         />
                                         <IconButton
-                                            aria-label="Delete"
-                                            icon={<Trash2 size={12} />}
                                             size="xs"
                                             variant="ghost"
-                                            color="whiteAlpha.400"
-                                            _hover={{ color: "red.300" }}
+                                            aria-label="Delete"
+                                            icon={<Trash2 size={14} className="text-purple-950 dark:text-white" />}
                                             onClick={() => handleDeleteTask(task.id)}
+                                            className="!bg-transparent !border-none hover:opacity-80 transition"
                                         />
                                     </Flex>
                                 </Flex>
