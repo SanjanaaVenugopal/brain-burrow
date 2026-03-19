@@ -226,8 +226,7 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
                             icon={<Trash2 size={12} />}
                             size="xs"
                             variant="ghost"
-                            className="!text-purple-300 dark:!text-white/40"
-                            _hover={{ color: "red.300" }}
+                            className="!text-red-500 dark:!text-red-400 hover:!bg-red-100 dark:hover:!bg-red-500/20 !border-none transition"
                             opacity={0}
                             _groupHover={{ opacity: 1 }}
                             onClick={(e) => { e.stopPropagation(); handleDelete(board.id); }}

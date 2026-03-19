@@ -8,6 +8,7 @@ import { db } from "../../firebase";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store";
 import { addTodo, deleteTodo, toggleRecurringCompletion, toggleTodo, updateTodo } from "./TodoSlice";
+import { deleteBoardTask, toggleBoardTask, updateBoardTask } from "../Board/BoardSlice";
 import { GroupedTodos } from "./GroupedTodos";
 import { useTodoForm } from "./useTodoForm";
 import { DisplayTodo, Todo } from "./Todo.type";
@@ -27,7 +28,38 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
     const dispatch = useDispatch<AppDispatch>();
 
     const todos = useSelector((state: RootState) => state.todos.todos);
-    const displayTodos = React.useMemo(() => computeDisplayTodos(todos), [todos]);
+    const boards = useSelector((state: RootState) => state.boards.boards);
+    const boardTasks = useSelector((state: RootState) => state.boards.tasks);
+
+    // Build board name lookup
+    const boardNameMap = React.useMemo(() => {
+        const map = new Map<string, string>();
+        for (const b of boards) map.set(b.id, b.name);
+        return map;
+    }, [boards]);
+
+    // Convert board tasks with scheduledAt into DisplayTodos
+    const boardDisplayTodos: DisplayTodo[] = React.useMemo(() =>
+        boardTasks
+            .filter((t) => t.scheduledAt)
+            .map((t) => ({
+                id: `board::${t.id}`,
+                title: t.title,
+                completed: t.completed,
+                description: t.description,
+                scheduledAt: t.scheduledAt,
+                tags: t.tags,
+                _boardName: boardNameMap.get(t.boardId) || "Board",
+                _boardTaskId: t.id,
+                _boardId: t.boardId,
+            })),
+        [boardTasks, boardNameMap]
+    );
+
+    const displayTodos = React.useMemo(() => {
+        const fromTodos = computeDisplayTodos(todos);
+        return [...fromTodos, ...boardDisplayTodos];
+    }, [todos, boardDisplayTodos]);
 
     const [editingTodo, setEditingTodo] = useState<DisplayTodo | undefined>(undefined);
     const [pendingEditTodo, setPendingEditTodo] = useState<Todo | undefined>(undefined);
@@ -35,6 +67,16 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
     const groupedTodos = GroupedTodos(displayTodos);
 
     const handleToggle = async (todo: DisplayTodo) => {
+        // Board task toggle
+        if (todo._boardTaskId) {
+            dispatch(toggleBoardTask(todo._boardTaskId));
+            try {
+                const docRef = doc(db, "BrainBurrowBoardTasks", todo._boardTaskId);
+                await updateDoc(docRef, { completed: !todo.completed });
+            } catch (err) { console.error("Error toggling board task:", err); }
+            return;
+        }
+
         if (todo._virtualDate && todo._baseId) {
             // Recurring virtual instance — toggle completion in base doc's completions map
             const baseId = todo._baseId;
@@ -73,6 +115,17 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
     };
 
     const handleDelete = async (todo: DisplayTodo) => {
+        // Board task delete
+        if (todo._boardTaskId) {
+            try {
+                await deleteDoc(doc(db, "BrainBurrowBoardTasks", todo._boardTaskId));
+                dispatch(deleteBoardTask(todo._boardTaskId));
+            } catch (error) {
+                toast({ title: "Error deleting", description: (error as Error).message, status: "error", duration: 3000, isClosable: true });
+            }
+            return;
+        }
+
         if (todo._baseId && todo.overrideOf) {
             // Delete override doc
             try {
@@ -124,12 +177,14 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
     // Called when "Just today" is chosen — create an override doc
     const handleEditJustToday = async (todo: Todo) => {
         if (!editingTodo?._virtualDate || !editingTodo?._baseId) return;
+        const { recurringEndDate: _re, completions: _c, ...rest } = todo;
         const overrideDoc: Todo = {
-            ...todo,
+            ...rest,
             id: "",
             overrideOf: editingTodo._baseId,
             overrideDate: editingTodo._virtualDate,
             completed: editingTodo.completed,
+            recurring: { type: "none" },
         };
         try {
             const docRef = await addDoc(collection(db, "BrainBurrowTodos"), overrideDoc);
@@ -143,6 +198,31 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
 
     // Called from form submit
     const handleEditSubmit = async (todo: Todo) => {
+        // Board task edit
+        if (editingTodo?._boardTaskId) {
+            try {
+                const docRef = doc(db, "BrainBurrowBoardTasks", editingTodo._boardTaskId);
+                await updateDoc(docRef, {
+                    title: todo.title,
+                    description: todo.description || "",
+                    tags: todo.tags || [],
+                    scheduledAt: todo.scheduledAt || null,
+                });
+                dispatch(updateBoardTask({
+                    ...boardTasks.find((t) => t.id === editingTodo._boardTaskId)!,
+                    title: todo.title,
+                    description: todo.description,
+                    tags: todo.tags,
+                    scheduledAt: todo.scheduledAt,
+                }));
+            } catch (err) {
+                toast({ title: "Error updating", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
+            }
+            onClose();
+            setEditingTodo(undefined);
+            return;
+        }
+
         if (editingTodo?._virtualDate) {
             // Recurring instance — show "all or just today" dialog
             setPendingEditTodo(todo);
@@ -150,8 +230,9 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
             onAlertOpen(); // open choice dialog
         } else {
             // Regular todo — update directly in Firestore + Redux
+            const updatedTodo = { ...todo, id: editingTodo!.id };
             try {
-                const docRef = doc(db, "BrainBurrowTodos", todo.id);
+                const docRef = doc(db, "BrainBurrowTodos", editingTodo!.id);
                 await updateDoc(docRef, {
                     title: todo.title,
                     description: todo.description || "",
@@ -163,7 +244,7 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
             } catch (err) {
                 toast({ title: "Error updating", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
             }
-            dispatch(updateTodo(todo));
+            dispatch(updateTodo(updatedTodo));
             onClose();
             setEditingTodo(undefined);
         }
@@ -171,6 +252,7 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
 
     const form = useTodoForm({
         onSuccess: handleEditSubmit,
+        skipFirestore: true,
     });
 
     // Build enriched todo and load it into the form
@@ -250,11 +332,23 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
 
                                     {todo.tags && todo.tags.length > 0 && (
                                         <Flex wrap="wrap" gap={1} mt={1}>
+                                            {todo._boardName && (
+                                                <Tag size="sm" colorScheme="pink" borderRadius="full">
+                                                    <TagLabel>{todo._boardName}</TagLabel>
+                                                </Tag>
+                                            )}
                                             {todo.tags.map((tag, i) => (
                                                 <Tag key={i} size="sm" colorScheme="purple" borderRadius="full">
                                                     <TagLabel>{tag}</TagLabel>
                                                 </Tag>
                                             ))}
+                                        </Flex>
+                                    )}
+                                    {!todo.tags?.length && todo._boardName && (
+                                        <Flex wrap="wrap" gap={1} mt={1}>
+                                            <Tag size="sm" colorScheme="pink" borderRadius="full">
+                                                <TagLabel>{todo._boardName}</TagLabel>
+                                            </Tag>
                                         </Flex>
                                     )}
                                 </Box>
@@ -274,7 +368,7 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                         onClick={() => openEditFor(todo)}
                                         className="!bg-transparent !border-none hover:opacity-80 transition"
                                     />
-                                    {!todo._virtualDate && (
+                                    {(!todo._virtualDate || todo._boardTaskId) && (
                                         <IconButton
                                             size="xs"
                                             variant="ghost"

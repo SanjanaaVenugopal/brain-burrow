@@ -39,4 +39,7 @@ export type Todo = {
 export type DisplayTodo = Todo & {
   _virtualDate?: string; // "YYYY-MM-DD" — present if this is a computed recurring instance
   _baseId?: string;      // base recurring todo ID
+  _boardName?: string;   // present if this task comes from a board
+  _boardTaskId?: string; // original board task ID (for toggle/edit/delete)
+  _boardId?: string;     // board ID this task belongs to
 };

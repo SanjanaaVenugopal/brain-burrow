@@ -98,6 +98,10 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
         setEditingTask(null);
         setModalColumnId(columnId);
         form.resetForm();
+        const now = new Date();
+        const minutes = Math.ceil(now.getMinutes() / 15) * 15;
+        now.setMinutes(minutes, 0, 0);
+        form.setScheduledAt(now);
         onOpen();
     };
 

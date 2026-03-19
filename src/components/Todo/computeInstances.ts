@@ -13,6 +13,7 @@ export function computeDisplayTodos(
   options?: { rangeStart?: Date; rangeEnd?: Date }
 ): DisplayTodo[] {
   const result: DisplayTodo[] = [];
+  const seen = new Set<string>(); // dedup guard
 
   // Separate overrides from regular todos
   const overrides = allTodos.filter((t) => t.overrideOf);
@@ -30,8 +31,11 @@ export function computeDisplayTodos(
     const isRecurring = todo.recurring && todo.recurring.type !== "none";
 
     if (!isRecurring) {
-      // Non-recurring: pass through as-is
-      result.push(todo);
+      // Non-recurring: pass through as-is (dedup by id)
+      if (!seen.has(todo.id)) {
+        seen.add(todo.id);
+        result.push(todo);
+      }
       continue;
     }
 
@@ -49,6 +53,11 @@ export function computeDisplayTodos(
 
     for (const date of dates) {
       const dateStr = format(date, "yyyy-MM-dd");
+      const instanceKey = `${todo.id}::${dateStr}`;
+
+      // Skip if we've already generated an instance for this base + date
+      if (seen.has(instanceKey)) continue;
+      seen.add(instanceKey);
 
       // Check if there's an override for this date
       const override = baseOverrides?.get(dateStr);
@@ -115,7 +124,7 @@ function generateRecurringDates(
   while (current <= effectiveEnd && iterations < MAX_ITERATIONS) {
     iterations++;
 
-    if (current >= rangeStart) {
+    if (current >= rangeStart && isDateMatchingPattern(todo, current, startDate)) {
       dates.push(new Date(current));
     }
 
@@ -126,6 +135,40 @@ function generateRecurringDates(
   }
 
   return dates;
+}
+
+/**
+ * Check if a date actually matches the recurring pattern.
+ * Prevents adding the startDate when it doesn't fall on a valid recurrence day.
+ */
+function isDateMatchingPattern(todo: Todo, date: Date, startDate: Date): boolean {
+  if (!todo.recurring) return false;
+
+  switch (todo.recurring.type) {
+    case "daily":
+      return true;
+    case "weekly": {
+      const days = todo.recurring.daysOfWeek;
+      if (days && days.length > 0) {
+        return days.includes(date.getDay());
+      }
+      // No specific days = every 7 days from start
+      return true;
+    }
+    case "monthly": {
+      const target = todo.recurring.dayOfMonth ?? startDate.getDate();
+      return date.getDate() === target;
+    }
+    case "yearly": {
+      const targetMonth = todo.recurring.month ?? startDate.getMonth();
+      const targetDay = todo.recurring.day ?? startDate.getDate();
+      return date.getMonth() === targetMonth && date.getDate() === targetDay;
+    }
+    case "custom":
+      return true;
+    default:
+      return true;
+  }
 }
 
 function getNextDate(todo: Todo, current: Date): Date | null {

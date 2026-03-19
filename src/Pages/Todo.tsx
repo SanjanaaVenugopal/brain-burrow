@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { TodoViewToggle } from "../components/Todo/TodoViewToggle";
 import { TodoDashboard } from "../components/Todo/TodoDashboard";
 import { TodoCalendar } from "../components/Todo/TodoCalendar";
 import { AddTodoButton } from "../components/Todo/AddTodoButton";
@@ -26,11 +25,7 @@ export const TodoPage = () => {
                 {activeBoardId === null ? (
                     /* Main Dashboard */
                     <>
-                        <TodoHeader />
-                        <br />
-                        <Box position="fixed" top="100px" left={{ base: "68px", md: "240px" }} zIndex={10}>
-                            <TodoViewToggle mode={mode} onChange={setMode} />
-                        </Box>
+                        <TodoHeader mode={mode} onModeChange={setMode} />
                         {mode === "dashboard" ? (
                             <TodoDashboard />
                         ) : (

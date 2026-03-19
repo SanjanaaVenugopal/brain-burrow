@@ -190,10 +190,10 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
                         </Box>
                         <IconButton
                             aria-label="Delete entry"
-                            icon={<Trash2 size={14} className="text-purple-950 dark:text-white" />}
+                            icon={<Trash2 size={14} />}
                             size="xs"
                             variant="ghost"
-                            className="!bg-transparent !border-none hover:opacity-80 transition"
+                            className="!text-red-500 dark:!text-red-400 hover:!bg-red-100 dark:hover:!bg-red-500/20 !border-none transition"
                             opacity={0}
                             _groupHover={{ opacity: 1 }}
                             onClick={(e) => { e.stopPropagation(); handleDelete(entry.id); }}
