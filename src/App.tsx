@@ -3,6 +3,7 @@ import './App.css';
 import { CommandBar } from './components/HomePage/CommandBar/CommandBar';
 import { HomePage } from './Pages/Home';
 import { TodoPage } from './Pages/Todo';
+import { JournalPage } from './Pages/Journal';
 
 export const App = () => {
   return (
@@ -12,6 +13,7 @@ export const App = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/todo" element={<TodoPage />} />
+          <Route path="/journal" element={<JournalPage />} />
         </Routes>
       </div>
     </>
