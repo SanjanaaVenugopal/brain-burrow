@@ -21,8 +21,12 @@ code {
   background: transparent;
   border: none;
   width: 100%;
-  color: white;
+  color: rgb(59, 7, 100);
   font-family: inherit;
+}
+
+.dark .todo-calendar .react-calendar {
+  color: white;
 }
 
 /* ── Animated month transitions ── */
@@ -47,13 +51,18 @@ code {
   margin-bottom: 1rem;
   padding: 0.5rem 0.75rem;
   border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.25), rgba(79, 70, 229, 0.15));
+  border: 1px solid rgba(147, 51, 234, 0.15);
+}
+
+.dark .todo-calendar .react-calendar__navigation {
   background: linear-gradient(135deg, rgba(147, 51, 234, 0.35), rgba(79, 70, 229, 0.25));
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .todo-calendar .react-calendar__navigation button {
   background: transparent;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgb(88, 28, 135);
   border: none;
   font-size: 1.05rem;
   font-weight: 700;
@@ -64,9 +73,17 @@ code {
   letter-spacing: 0.02em;
 }
 
+.dark .todo-calendar .react-calendar__navigation button {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .todo-calendar .react-calendar__navigation button:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(147, 51, 234, 0.1);
   transform: scale(1.05);
+}
+
+.dark .todo-calendar .react-calendar__navigation button:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .todo-calendar .react-calendar__navigation button:disabled {
@@ -79,12 +96,17 @@ code {
   text-align: center;
   font-size: 0.7rem;
   font-weight: 700;
-  color: rgba(196, 181, 253, 0.6);
+  color: rgb(107, 33, 168);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(147, 51, 234, 0.12);
   margin-bottom: 0.25rem;
+}
+
+.dark .todo-calendar .react-calendar__month-view__weekdays {
+  color: rgba(196, 181, 253, 0.6);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
 .todo-calendar .react-calendar__month-view__weekdays abbr {
@@ -95,7 +117,7 @@ code {
 .todo-calendar .react-calendar__tile {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgb(59, 7, 100);
   padding: 0.5rem 0.25rem;
   border-radius: 0.75rem;
   cursor: pointer;
@@ -109,9 +131,17 @@ code {
   position: relative;
 }
 
+.dark .todo-calendar .react-calendar__tile {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .todo-calendar .react-calendar__tile:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(147, 51, 234, 0.08);
   transform: translateY(-1px);
+}
+
+.dark .todo-calendar .react-calendar__tile:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ── Tiles with tasks get a glow ring on hover ── */
@@ -128,6 +158,10 @@ code {
 .todo-calendar .react-calendar__tile--now {
   background: transparent !important;
   font-weight: 800;
+  color: rgb(88, 28, 135) !important;
+}
+
+.dark .todo-calendar .react-calendar__tile--now {
   color: white !important;
 }
 
@@ -152,13 +186,21 @@ code {
 
 /* ── Neighboring month dates ── */
 .todo-calendar .react-calendar__tile--neighboringMonth {
+  color: rgba(147, 51, 234, 0.3);
+}
+
+.dark .todo-calendar .react-calendar__tile--neighboringMonth {
   color: rgba(255, 255, 255, 0.15);
 }
 
 /* ── Weekend subtle stripe ── */
 .todo-calendar .react-calendar__month-view__days__day--weekend {
-  color: rgba(196, 181, 253, 0.85);
+  color: rgb(107, 33, 168);
   background: rgba(147, 51, 234, 0.04);
+}
+
+.dark .todo-calendar .react-calendar__month-view__days__day--weekend {
+  color: rgba(196, 181, 253, 0.85);
 }
 
 /* ── Alternating row shading ── */
@@ -181,7 +223,7 @@ code {
   padding: 2px 6px;
   margin-bottom: 2px;
   border-radius: 6px;
-  color: white;
+  color: rgb(59, 7, 100);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -189,15 +231,32 @@ code {
   transition: all 0.15s ease;
 }
 
+.dark .cal-task-pill {
+  color: white;
+}
+
 .cal-task-pill--active {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.55), rgba(124, 58, 237, 0.4));
+  border: 1px solid rgba(147, 51, 234, 0.2);
+  box-shadow: 0 1px 4px rgba(147, 51, 234, 0.15);
+  color: white;
+}
+
+.dark .cal-task-pill--active {
   background: linear-gradient(135deg, rgba(147, 51, 234, 0.7), rgba(124, 58, 237, 0.5));
   border: 1px solid rgba(196, 181, 253, 0.25);
   box-shadow: 0 1px 4px rgba(147, 51, 234, 0.2);
 }
 
 .cal-task-pill--done {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.5), rgba(22, 163, 74, 0.3));
-  border: 1px solid rgba(134, 239, 172, 0.2);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.4), rgba(22, 163, 74, 0.25));
+  border: 1px solid rgba(34, 197, 94, 0.15);
   opacity: 0.6;
   text-decoration: line-through;
+  color: white;
+}
+
+.dark .cal-task-pill--done {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.5), rgba(22, 163, 74, 0.3));
+  border: 1px solid rgba(134, 239, 172, 0.2);
 }

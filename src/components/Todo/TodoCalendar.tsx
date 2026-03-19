@@ -89,7 +89,7 @@ export const TodoCalendar: React.FC = () => {
                                     </div>
                                 ))}
                                 {extra > 0 && (
-                                    <Text fontSize="2xs" color="purple.200" opacity={0.7} lineHeight="1.2" mt="1px">
+                                    <Text fontSize="2xs" className="!text-purple-600 dark:!text-purple-200" opacity={0.7} lineHeight="1.2" mt="1px">
                                         +{extra} more
                                     </Text>
                                 )}
