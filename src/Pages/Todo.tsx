@@ -9,7 +9,7 @@ import { TodoHeader } from "../components/Todo/TodoHeader";
 import { Box, useToast } from "@chakra-ui/react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { addTodo, setTodos } from "../components/Todo/TodoSlice";
+import { addTodo, setTodos, checkAndCreateMissingInstances } from "../components/Todo/TodoSlice";
 import type { RootState, AppDispatch } from "../store";
 import { normalizeDate } from "../components/Todo/NormalizeDates";
 
@@ -26,13 +26,19 @@ export const TodoPage = () => {
         const fetchTodos = async () => {
             try {
                 const snapshot = await getDocs(collection(db, "BrainBurrowTodos"));
-                const todoList: Todo[] = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    dueDate: normalizeDate(doc.data().dueDate),
-                    scheduledAt: normalizeDate(doc.data().scheduledAt),
-                    ...(doc.data() as Omit<Todo, "id">),
-                }));
-                dispatch(setTodos(todoList)); // push todos to Redux store
+                const todoList: Todo[] = snapshot.docs.map((doc) => {
+                    const data = doc.data();
+                    return {
+                        ...data,
+                        id: doc.id,
+                        dueDate: normalizeDate(data.dueDate),
+                        scheduledAt: normalizeDate(data.scheduledAt),
+                        recurringEndDate: normalizeDate(data.recurringEndDate),
+                        completedAt: normalizeDate(data.completedAt),
+                    } as Todo;
+                });
+                dispatch(setTodos(todoList));
+                dispatch(checkAndCreateMissingInstances());
             } catch (err) {
                 console.error("Error fetching todos:", err);
                 toast({
