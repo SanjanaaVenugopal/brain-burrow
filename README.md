@@ -1,4 +1,4 @@
-# Brain Burrow
+# Mind Nest (Brain Burrow)
 
 A personal productivity app built with React and TypeScript, featuring a smart todo system with recurring tasks, custom project boards, a lightweight journal, and an interactive calendar view.
 
