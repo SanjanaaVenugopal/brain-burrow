@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { RecurrencePattern, Todo } from "./Todo.type";
 import { isToday, isSameDay, addDays } from "date-fns";
 import { useToast } from "@chakra-ui/react";
-import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { normalizeDate } from "./NormalizeDates";
 
@@ -69,21 +69,25 @@ export const useTodoForm = ({ existingTodo, onSuccess }: UseTodoFormProps) => {
             description: description.trim(),
             completed: existingTodo?.completed || false,
             tags: tags ?? [],
-            // Recurrence
             recurring: recurring?.type !== "none" ? recurring : { type: "none" },
             ...(recurring?.type !== "none" && recurringEndDate ? { recurringEndDate } : {}),
             ...(scheduledAt ? { scheduledAt } : {}),
+            // Preserve completions map if editing
+            ...(existingTodo?.completions ? { completions: existingTodo.completions } : {}),
         };
 
+        if (existingTodo) {
+            // For edits, let the parent handle Firestore writes
+            // (supports "All instances" vs "Just today" for recurring)
+            onSuccess(todo);
+            resetForm();
+            return;
+        }
+
         try {
-            if (existingTodo) {
-                const docRef = doc(db, "BrainBurrowTodos", existingTodo.id);
-                await updateDoc(docRef, todo);
-            } else {
-                const docRef = await addDoc(collection(db, "BrainBurrowTodos"), todo);
-                await updateDoc(docRef, { id: docRef.id });
-                todo.id = docRef.id;
-            }
+            const docRef = await addDoc(collection(db, "BrainBurrowTodos"), todo);
+            await updateDoc(docRef, { id: docRef.id });
+            todo.id = docRef.id;
 
             onSuccess(todo);
             resetForm();
