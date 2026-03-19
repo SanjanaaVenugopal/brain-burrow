@@ -1,11 +1,11 @@
 import { Flex } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { DashboardCard } from "./DashboardCard";
-import { getSections } from "./Sections";
+import { useSections } from "./Sections";
 
 export const MainContent = () => {
     const navigate = useNavigate();
-    const sections = getSections(navigate);
+    const sections = useSections(navigate);
     return (
         <Flex
             direction={{ base: "column", md: "row" }}
