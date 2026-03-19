@@ -1,9 +1,8 @@
+import React from "react";
 import { Header } from "../components/HomePage/MainContent/Header";
 import { MainContent } from "../components/HomePage/MainContent/MainContent";
 
-type HomeProps = {};
-
-export const HomePage: React.FC<HomeProps> = () => {
+export const HomePage: React.FC = () => {
     return (<>
         <Header />
         <MainContent />
