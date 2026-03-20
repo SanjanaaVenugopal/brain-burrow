@@ -48,7 +48,7 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
             // Delete tasks for this board using Redux state (no extra Firestore read)
             const tasksToDelete = allTasks.filter((t) => t.boardId === boardId);
             await Promise.all(
-                tasksToDelete.map((t) => deleteDoc(doc(db, "BrainBurrowBoardTasks", t.id)))
+                tasksToDelete.map((t) => deleteDoc(doc(db, "BrainBurrowTodos", t.id)))
             );
             await deleteDoc(doc(db, "BrainBurrowBoards", boardId));
             dispatch(deleteBoard(boardId));

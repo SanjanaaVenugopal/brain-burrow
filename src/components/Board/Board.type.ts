@@ -8,15 +8,3 @@ export type Board = {
   name: string;
   columns: BoardColumn[];
 };
-
-export type BoardTask = {
-  id: string;
-  boardId: string;
-  columnId: string;
-  title: string;
-  completed: boolean;
-  description?: string;
-  scheduledAt?: Date;
-  tags?: string[];
-  order: number;
-};

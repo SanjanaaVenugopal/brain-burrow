@@ -43,15 +43,8 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
         boardTasks
             .filter((t) => t.scheduledAt)
             .map((t) => ({
-                id: `board::${t.id}`,
-                title: t.title,
-                completed: t.completed,
-                description: t.description,
-                scheduledAt: t.scheduledAt,
-                tags: t.tags,
-                _boardName: boardNameMap.get(t.boardId) || "Board",
-                _boardTaskId: t.id,
-                _boardId: t.boardId,
+                ...t,
+                _boardName: boardNameMap.get(t.boardId!) || "Board",
             })),
         [boardTasks, boardNameMap]
     );
@@ -68,10 +61,10 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
 
     const handleToggle = async (todo: DisplayTodo) => {
         // Board task toggle
-        if (todo._boardTaskId) {
-            dispatch(toggleBoardTask(todo._boardTaskId));
+        if (todo.boardId) {
+            dispatch(toggleBoardTask(todo.id));
             try {
-                const docRef = doc(db, "BrainBurrowBoardTasks", todo._boardTaskId);
+                const docRef = doc(db, "BrainBurrowTodos", todo.id);
                 await updateDoc(docRef, { completed: !todo.completed });
             } catch (err) { console.error("Error toggling board task:", err); }
             return;
@@ -116,10 +109,10 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
 
     const handleDelete = async (todo: DisplayTodo) => {
         // Board task delete
-        if (todo._boardTaskId) {
+        if (todo.boardId) {
             try {
-                await deleteDoc(doc(db, "BrainBurrowBoardTasks", todo._boardTaskId));
-                dispatch(deleteBoardTask(todo._boardTaskId));
+                await deleteDoc(doc(db, "BrainBurrowTodos", todo.id));
+                dispatch(deleteBoardTask(todo.id));
             } catch (error) {
                 toast({ title: "Error deleting", description: (error as Error).message, status: "error", duration: 3000, isClosable: true });
             }
@@ -199,9 +192,9 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
     // Called from form submit
     const handleEditSubmit = async (todo: Todo) => {
         // Board task edit
-        if (editingTodo?._boardTaskId) {
+        if (editingTodo?.boardId) {
             try {
-                const docRef = doc(db, "BrainBurrowBoardTasks", editingTodo._boardTaskId);
+                const docRef = doc(db, "BrainBurrowTodos", editingTodo.id);
                 await updateDoc(docRef, {
                     title: todo.title,
                     description: todo.description || "",
@@ -209,7 +202,7 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                     scheduledAt: todo.scheduledAt || null,
                 });
                 dispatch(updateBoardTask({
-                    ...boardTasks.find((t) => t.id === editingTodo._boardTaskId)!,
+                    ...boardTasks.find((t) => t.id === editingTodo.id)!,
                     title: todo.title,
                     description: todo.description,
                     tags: todo.tags,
@@ -368,7 +361,7 @@ export const TodoDashboard: React.FC<TodoDashboardProps> = () => {
                                         onClick={() => openEditFor(todo)}
                                         className="!bg-transparent !border-none hover:opacity-80 transition"
                                     />
-                                    {(!todo._virtualDate || todo._boardTaskId) && (
+                                    {(!todo._virtualDate || todo.boardId) && (
                                         <IconButton
                                             size="xs"
                                             variant="ghost"

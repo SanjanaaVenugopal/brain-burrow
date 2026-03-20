@@ -1,9 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Board, BoardTask } from "./Board.type";
+import { Board } from "./Board.type";
+import { Todo } from "../Todo/Todo.type";
 
 type BoardState = {
   boards: Board[];
-  tasks: BoardTask[];
+  tasks: Todo[];
 };
 
 const initialState: BoardState = {
@@ -29,13 +30,13 @@ const boardSlice = createSlice({
       state.boards = state.boards.filter((b) => b.id !== action.payload);
       state.tasks = state.tasks.filter((t) => t.boardId !== action.payload);
     },
-    setBoardTasks: (state, action: PayloadAction<BoardTask[]>) => {
+    setBoardTasks: (state, action: PayloadAction<Todo[]>) => {
       state.tasks = action.payload;
     },
-    addBoardTask: (state, action: PayloadAction<BoardTask>) => {
+    addBoardTask: (state, action: PayloadAction<Todo>) => {
       state.tasks.push(action.payload);
     },
-    updateBoardTask: (state, action: PayloadAction<BoardTask>) => {
+    updateBoardTask: (state, action: PayloadAction<Todo>) => {
       const idx = state.tasks.findIndex((t) => t.id === action.payload.id);
       if (idx !== -1) state.tasks[idx] = action.payload;
     },

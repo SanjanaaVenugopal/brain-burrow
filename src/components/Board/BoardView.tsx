@@ -6,7 +6,7 @@ import {
 import { Plus, Trash2, Edit2 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../store";
-import { Board, BoardTask } from "./Board.type";
+import { Board } from "./Board.type";
 import {
     updateBoard, addBoardTask, deleteBoardTask, toggleBoardTask, updateBoardTask,
 } from "./BoardSlice";
@@ -38,12 +38,12 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
     // For add/edit task via TodoModal
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [modalColumnId, setModalColumnId] = useState<string | null>(null);
-    const [editingTask, setEditingTask] = useState<BoardTask | null>(null);
+    const [editingTask, setEditingTask] = useState<Todo | null>(null);
 
     const handleFormSuccess = async (todo: Todo) => {
         if (editingTask) {
             // Edit existing
-            const updated: BoardTask = {
+            const updated: Todo = {
                 ...editingTask,
                 title: todo.title,
                 description: todo.description,
@@ -51,7 +51,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                 tags: todo.tags,
             };
             try {
-                await updateDoc(doc(db, "BrainBurrowBoardTasks", updated.id), {
+                await updateDoc(doc(db, "BrainBurrowTodos", updated.id), {
                     title: updated.title,
                     description: updated.description || "",
                     scheduledAt: updated.scheduledAt || null,
@@ -64,7 +64,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
         } else if (modalColumnId) {
             // Add new
             const colTasks = boardTasks.filter((t) => t.columnId === modalColumnId);
-            const task: BoardTask = {
+            const task: Todo = {
                 id: "",
                 boardId,
                 columnId: modalColumnId,
@@ -76,7 +76,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                 ...(todo.scheduledAt ? { scheduledAt: todo.scheduledAt } : {}),
             };
             try {
-                const docRef = await addDoc(collection(db, "BrainBurrowBoardTasks"), task);
+                const docRef = await addDoc(collection(db, "BrainBurrowTodos"), task);
                 await updateDoc(docRef, { id: docRef.id });
                 task.id = docRef.id;
                 dispatch(addBoardTask(task));
@@ -105,9 +105,9 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
         onOpen();
     };
 
-    const openEditModal = (task: BoardTask) => {
+    const openEditModal = (task: Todo) => {
         setEditingTask(task);
-        setModalColumnId(task.columnId);
+        setModalColumnId(task.columnId ?? null);
         form.loadTodo({
             id: task.id,
             title: task.title,
@@ -151,7 +151,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
             // Delete tasks in this column
             const colTasks = boardTasks.filter((t) => t.columnId === columnId);
             for (const t of colTasks) {
-                await deleteDoc(doc(db, "BrainBurrowBoardTasks", t.id));
+                await deleteDoc(doc(db, "BrainBurrowTodos", t.id));
                 dispatch(deleteBoardTask(t.id));
             }
             dispatch(updateBoard(updated));
@@ -160,10 +160,10 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
         }
     };
 
-    const handleToggleTask = async (task: BoardTask) => {
+    const handleToggleTask = async (task: Todo) => {
         dispatch(toggleBoardTask(task.id));
         try {
-            await updateDoc(doc(db, "BrainBurrowBoardTasks", task.id), {
+            await updateDoc(doc(db, "BrainBurrowTodos", task.id), {
                 completed: !task.completed,
             });
         } catch (err) {
@@ -173,7 +173,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
 
     const handleDeleteTask = async (taskId: string) => {
         try {
-            await deleteDoc(doc(db, "BrainBurrowBoardTasks", taskId));
+            await deleteDoc(doc(db, "BrainBurrowTodos", taskId));
             dispatch(deleteBoardTask(taskId));
         } catch (err) {
             toast({ title: "Error deleting task", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
@@ -197,7 +197,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                 {board.columns.map((col) => {
                     const colTasks = boardTasks
                         .filter((t) => t.columnId === col.id)
-                        .sort((a, b) => a.order - b.order);
+                        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
                     return (
                         <Box
