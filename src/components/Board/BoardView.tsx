@@ -8,15 +8,20 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../store";
 import { Board } from "./Board.type";
 import {
-    updateBoard, addBoardTask, deleteBoardTask, toggleBoardTask, updateBoardTask,
+    updateBoard,
 } from "./BoardSlice";
-import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { addTodo } from "../Todo/TodoSlice";
+import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useTodoForm } from "../Todo/useTodoForm";
 import { TodoModal } from "../Todo/TodoModal";
 import { Todo } from "../Todo/Todo.type";
+import { useToggleTodo } from "../Todo/useToggleTodo";
+import { useDeleteTodo } from "../Todo/useDeleteTodo";
+import { useUpdateBoardTask } from "../Todo/useEditTodo";
 import { normalizeDate } from "../Todo/NormalizeDates";
 import { format } from "date-fns";
+import { FirestoreCollections } from "../../Data/constants";
 
 type Props = {
     boardId: string;
@@ -26,10 +31,14 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
     const dispatch = useDispatch<AppDispatch>();
     const toast = useToast();
 
+    const toggleTodo = useToggleTodo();
+    const deleteTodoFn = useDeleteTodo();
+    const updateBoardTaskFn = useUpdateBoardTask();
+
     const board = useSelector((state: RootState) =>
         state.boards.boards.find((b) => b.id === boardId)
     );
-    const allTasks = useSelector((state: RootState) => state.boards.tasks);
+    const allTasks = useSelector((state: RootState) => state.todos.todos);
     const boardTasks = useMemo(() => allTasks.filter((t) => t.boardId === boardId), [allTasks, boardId]);
 
     const [addingColumnName, setAddingColumnName] = useState("");
@@ -42,25 +51,8 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
 
     const handleFormSuccess = async (todo: Todo) => {
         if (editingTask) {
-            // Edit existing
-            const updated: Todo = {
-                ...editingTask,
-                title: todo.title,
-                description: todo.description,
-                scheduledAt: todo.scheduledAt,
-                tags: todo.tags,
-            };
-            try {
-                await updateDoc(doc(db, "BrainBurrowTodos", updated.id), {
-                    title: updated.title,
-                    description: updated.description || "",
-                    scheduledAt: updated.scheduledAt || null,
-                    tags: updated.tags || [],
-                });
-                dispatch(updateBoardTask(updated));
-            } catch (err) {
-                toast({ title: "Error updating task", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
-            }
+            // Edit existing — use shared hook
+            await updateBoardTaskFn(todo, editingTask);
         } else if (modalColumnId) {
             // Add new
             const colTasks = boardTasks.filter((t) => t.columnId === modalColumnId);
@@ -76,10 +68,10 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                 ...(todo.scheduledAt ? { scheduledAt: todo.scheduledAt } : {}),
             };
             try {
-                const docRef = await addDoc(collection(db, "BrainBurrowTodos"), task);
+                const docRef = await addDoc(collection(db, FirestoreCollections.Todos), task);
                 await updateDoc(docRef, { id: docRef.id });
                 task.id = docRef.id;
-                dispatch(addBoardTask(task));
+                dispatch(addTodo(task));
             } catch (err) {
                 toast({ title: "Error adding task", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
             }
@@ -128,7 +120,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
         const newCol = { id: `col-${Date.now()}`, name };
         const updated: Board = { ...board, columns: [...board.columns, newCol] };
         try {
-            await updateDoc(doc(db, "BrainBurrowBoards", board.id), {
+            await updateDoc(doc(db, FirestoreCollections.Boards, board.id), {
                 columns: updated.columns,
             });
             dispatch(updateBoard(updated));
@@ -145,14 +137,13 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
             columns: board.columns.filter((c) => c.id !== columnId),
         };
         try {
-            await updateDoc(doc(db, "BrainBurrowBoards", board.id), {
+            await updateDoc(doc(db, FirestoreCollections.Boards, board.id), {
                 columns: updated.columns,
             });
             // Delete tasks in this column
             const colTasks = boardTasks.filter((t) => t.columnId === columnId);
             for (const t of colTasks) {
-                await deleteDoc(doc(db, "BrainBurrowTodos", t.id));
-                dispatch(deleteBoardTask(t.id));
+                await deleteTodoFn(t);
             }
             dispatch(updateBoard(updated));
         } catch (err) {
@@ -160,25 +151,9 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
         }
     };
 
-    const handleToggleTask = async (task: Todo) => {
-        dispatch(toggleBoardTask(task.id));
-        try {
-            await updateDoc(doc(db, "BrainBurrowTodos", task.id), {
-                completed: !task.completed,
-            });
-        } catch (err) {
-            console.error("Error toggling task:", err);
-        }
-    };
+    const handleToggleTask = async (task: Todo) => toggleTodo(task);
 
-    const handleDeleteTask = async (taskId: string) => {
-        try {
-            await deleteDoc(doc(db, "BrainBurrowTodos", taskId));
-            dispatch(deleteBoardTask(taskId));
-        } catch (err) {
-            toast({ title: "Error deleting task", description: (err as Error).message, status: "error", duration: 3000, isClosable: true });
-        }
-    };
+    const handleDeleteTask = async (task: Todo) => deleteTodoFn(task);
 
 
 
@@ -302,7 +277,7 @@ export const BoardView: React.FC<Props> = ({ boardId }) => {
                                             variant="ghost"
                                             aria-label="Delete"
                                             icon={<Trash2 size={14} className="text-purple-950 dark:text-white" />}
-                                            onClick={() => handleDeleteTask(task.id)}
+                                            onClick={() => handleDeleteTask(task)}
                                             className="!bg-transparent !border-none hover:opacity-80 transition"
                                         />
                                     </Flex>

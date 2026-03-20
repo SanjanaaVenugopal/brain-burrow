@@ -34,3 +34,9 @@ export enum TodoTexts {
 }
 
 export const iconSize = 16;
+
+export enum FirestoreCollections {
+  Todos = "BrainBurrowTodos",
+  Boards = "BrainBurrowBoards",
+  Journals = "BrainBurrowJournals",
+}

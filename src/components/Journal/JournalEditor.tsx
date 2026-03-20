@@ -8,6 +8,7 @@ import { RootState, AppDispatch } from "../../store";
 import { updateEntry } from "./JournalSlice";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import { FirestoreCollections } from "../../Data/constants";
 import { format } from "date-fns";
 
 type Props = {
@@ -59,7 +60,7 @@ export const JournalEditor: React.FC<Props> = ({ entryId }) => {
         const now = new Date().toISOString();
         const updated = { ...entry, title: title.trim() || entry.title, content, updatedAt: now };
         try {
-            await updateDoc(doc(db, "BrainBurrowJournals", entry.id), {
+            await updateDoc(doc(db, FirestoreCollections.Journals, entry.id), {
                 title: updated.title,
                 content: updated.content,
                 updatedAt: now,

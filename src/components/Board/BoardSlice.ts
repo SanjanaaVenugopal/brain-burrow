@@ -1,15 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Board } from "./Board.type";
-import { Todo } from "../Todo/Todo.type";
 
 type BoardState = {
   boards: Board[];
-  tasks: Todo[];
 };
 
 const initialState: BoardState = {
   boards: [],
-  tasks: [],
 };
 
 const boardSlice = createSlice({
@@ -28,24 +25,6 @@ const boardSlice = createSlice({
     },
     deleteBoard: (state, action: PayloadAction<string>) => {
       state.boards = state.boards.filter((b) => b.id !== action.payload);
-      state.tasks = state.tasks.filter((t) => t.boardId !== action.payload);
-    },
-    setBoardTasks: (state, action: PayloadAction<Todo[]>) => {
-      state.tasks = action.payload;
-    },
-    addBoardTask: (state, action: PayloadAction<Todo>) => {
-      state.tasks.push(action.payload);
-    },
-    updateBoardTask: (state, action: PayloadAction<Todo>) => {
-      const idx = state.tasks.findIndex((t) => t.id === action.payload.id);
-      if (idx !== -1) state.tasks[idx] = action.payload;
-    },
-    deleteBoardTask: (state, action: PayloadAction<string>) => {
-      state.tasks = state.tasks.filter((t) => t.id !== action.payload);
-    },
-    toggleBoardTask: (state, action: PayloadAction<string>) => {
-      const task = state.tasks.find((t) => t.id === action.payload);
-      if (task) task.completed = !task.completed;
     },
   },
 });
@@ -55,11 +34,6 @@ export const {
   addBoard,
   updateBoard,
   deleteBoard,
-  setBoardTasks,
-  addBoardTask,
-  updateBoardTask,
-  deleteBoardTask,
-  toggleBoardTask,
 } = boardSlice.actions;
 
 export default boardSlice.reducer;
