@@ -9,6 +9,7 @@ import { addEntry, deleteEntry } from "./JournalSlice";
 import { JournalEntry } from "./Journal.type";
 import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import { FirestoreCollections } from "../../Data/constants";
 import { format } from "date-fns";
 
 type Props = {
@@ -30,7 +31,7 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
         const now = new Date().toISOString();
         const entry: JournalEntry = { id: "", title, content: "", createdAt: now, updatedAt: now };
         try {
-            const docRef = await addDoc(collection(db, "BrainBurrowJournals"), entry);
+            const docRef = await addDoc(collection(db, FirestoreCollections.Journals), entry);
             await updateDoc(docRef, { id: docRef.id });
             entry.id = docRef.id;
             dispatch(addEntry(entry));
@@ -44,7 +45,7 @@ export const JournalSidebar: React.FC<Props> = ({ activeEntryId, onSelect }) => 
 
     const handleDelete = async (entryId: string) => {
         try {
-            await deleteDoc(doc(db, "BrainBurrowJournals", entryId));
+            await deleteDoc(doc(db, FirestoreCollections.Journals, entryId));
             dispatch(deleteEntry(entryId));
             if (activeEntryId === entryId) onSelect(null);
         } catch (err) {

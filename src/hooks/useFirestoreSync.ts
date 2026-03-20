@@ -4,12 +4,13 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { setTodos } from "../components/Todo/TodoSlice";
 import { setEntries } from "../components/Journal/JournalSlice";
-import { setBoards, setBoardTasks } from "../components/Board/BoardSlice";
+import { setBoards } from "../components/Board/BoardSlice";
 import { normalizeDate } from "../components/Todo/NormalizeDates";
 import type { Todo } from "../components/Todo/Todo.type";
 import type { JournalEntry } from "../components/Journal/Journal.type";
-import type { Board, BoardTask } from "../components/Board/Board.type";
+import type { Board } from "../components/Board/Board.type";
 import type { AppDispatch } from "../store";
+import { FirestoreCollections } from "../Data/constants";
 
 export const useFirestoreSync = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -17,14 +18,13 @@ export const useFirestoreSync = () => {
     useEffect(() => {
         const fetchAll = async () => {
             try {
-                const [todoSnap, journalSnap, boardSnap, taskSnap] = await Promise.all([
-                    getDocs(collection(db, "BrainBurrowTodos")),
-                    getDocs(collection(db, "BrainBurrowJournals")),
-                    getDocs(collection(db, "BrainBurrowBoards")),
-                    getDocs(collection(db, "BrainBurrowBoardTasks")),
+                const [todoSnap, journalSnap, boardSnap] = await Promise.all([
+                    getDocs(collection(db, FirestoreCollections.Todos)),
+                    getDocs(collection(db, FirestoreCollections.Journals)),
+                    getDocs(collection(db, FirestoreCollections.Boards)),
                 ]);
 
-                const todos: Todo[] = todoSnap.docs.map((doc) => {
+                const allDocs: Todo[] = todoSnap.docs.map((doc) => {
                     const data = doc.data();
                     return {
                         ...data,
@@ -36,7 +36,8 @@ export const useFirestoreSync = () => {
                         completions: data.completions || {},
                     } as Todo;
                 });
-                dispatch(setTodos(todos));
+
+                dispatch(setTodos(allDocs));
 
                 const entries: JournalEntry[] = journalSnap.docs
                     .map((d) => ({ ...d.data(), id: d.id } as JournalEntry))
@@ -45,9 +46,6 @@ export const useFirestoreSync = () => {
 
                 const boards: Board[] = boardSnap.docs.map((d) => ({ ...d.data(), id: d.id } as Board));
                 dispatch(setBoards(boards));
-
-                const tasks: BoardTask[] = taskSnap.docs.map((d) => ({ ...d.data(), id: d.id } as BoardTask));
-                dispatch(setBoardTasks(tasks));
             } catch (err) {
                 console.error("Error fetching data:", err);
             }

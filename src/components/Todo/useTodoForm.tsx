@@ -5,6 +5,7 @@ import { useToast } from "@chakra-ui/react";
 import { addDoc, collection, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { normalizeDate } from "./NormalizeDates";
+import { FirestoreCollections } from "../../Data/constants";
 
 type UseTodoFormProps = {
     existingTodo?: Todo; // for editing
@@ -85,7 +86,7 @@ export const useTodoForm = ({ existingTodo, onSuccess, skipFirestore }: UseTodoF
         }
 
         try {
-            const docRef = await addDoc(collection(db, "BrainBurrowTodos"), todo);
+            const docRef = await addDoc(collection(db, FirestoreCollections.Todos), todo);
             await updateDoc(docRef, { id: docRef.id });
             todo.id = docRef.id;
 

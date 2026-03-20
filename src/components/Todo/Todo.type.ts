@@ -30,6 +30,11 @@ export type Todo = {
 
   // Completion tracking (non-recurring)
   completedAt?: Date;
+
+  // Board fields (present when task belongs to a board)
+  boardId?: string;
+  columnId?: string;
+  order?: number;
 };
 
 /**
@@ -39,7 +44,5 @@ export type Todo = {
 export type DisplayTodo = Todo & {
   _virtualDate?: string; // "YYYY-MM-DD" — present if this is a computed recurring instance
   _baseId?: string;      // base recurring todo ID
-  _boardName?: string;   // present if this task comes from a board
-  _boardTaskId?: string; // original board task ID (for toggle/edit/delete)
-  _boardId?: string;     // board ID this task belongs to
+  _boardName?: string;   // derived display name of the board (present for board tasks)
 };

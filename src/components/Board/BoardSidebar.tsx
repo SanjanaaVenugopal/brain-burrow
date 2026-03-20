@@ -9,6 +9,7 @@ import { addBoard, deleteBoard } from "./BoardSlice";
 import { Board } from "./Board.type";
 import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import { FirestoreCollections } from "../../Data/constants";
 
 type Props = {
     activeBoardId: string | null; // null = main dashboard
@@ -17,7 +18,7 @@ type Props = {
 
 export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
     const boards = useSelector((state: RootState) => state.boards.boards);
-    const allTasks = useSelector((state: RootState) => state.boards.tasks);
+    const allTasks = useSelector((state: RootState) => state.todos.todos);
     const dispatch = useDispatch<AppDispatch>();
     const toast = useToast();
 
@@ -31,7 +32,7 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
 
         const board: Board = { id: "", name, columns: [] };
         try {
-            const docRef = await addDoc(collection(db, "BrainBurrowBoards"), board);
+            const docRef = await addDoc(collection(db, FirestoreCollections.Boards), board);
             await updateDoc(docRef, { id: docRef.id });
             board.id = docRef.id;
             dispatch(addBoard(board));
@@ -48,9 +49,9 @@ export const BoardSidebar: React.FC<Props> = ({ activeBoardId, onSelect }) => {
             // Delete tasks for this board using Redux state (no extra Firestore read)
             const tasksToDelete = allTasks.filter((t) => t.boardId === boardId);
             await Promise.all(
-                tasksToDelete.map((t) => deleteDoc(doc(db, "BrainBurrowBoardTasks", t.id)))
+                tasksToDelete.map((t) => deleteDoc(doc(db, FirestoreCollections.Todos, t.id)))
             );
-            await deleteDoc(doc(db, "BrainBurrowBoards", boardId));
+            await deleteDoc(doc(db, FirestoreCollections.Boards, boardId));
             dispatch(deleteBoard(boardId));
             if (activeBoardId === boardId) onSelect(null);
         } catch (err) {
